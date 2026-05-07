@@ -1,7 +1,7 @@
 # NT208 - Reddit-like Comment System
 
 ## Thành viên nhóm:
-- Lê Hồ Khánh Linh (Lead)
+- Lê Hồ Khánh Linh 
 - Bùi Nguyễn Minh Anh
 - Lê Lâm Bảo Tư
 - Thân Thị Khánh Linh
