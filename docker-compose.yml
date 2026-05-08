@@ -12,24 +12,24 @@ services:
     volumes:
       - db_data:/var/lib/mysql
 
-  backend:
-    build: ./backend
-    ports:
-      - "5000:5000"
-    depends_on:
-      - db
-    environment:
-      DB_HOST: db
-      DB_USER: root
-      DB_PASSWORD: root_password
-      DB_NAME: reddit_db
+  # backend:
+  #   build: ./backend
+  #   ports:
+  #     - "5000:5000"
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     DB_HOST: db
+  #     DB_USER: root
+  #     DB_PASSWORD: root_password
+  #     DB_NAME: reddit_db
 
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    stdin_open: true
-    tty: true
+  # frontend:
+  #   build: ./frontend
+  #   ports:
+  #     - "3000:3000"
+  #   stdin_open: true
+  #   tty: true
 
 volumes:
   db_data:
