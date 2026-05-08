@@ -1,13 +1,4 @@
-const mysql = require('mysql2');
-require('dotenv').config();
-
-const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10
-});
-
-module.exports = pool.promise();
+// TODO: Setup MySQL connection pool
+// - Use mysql2/promise
+// - Configure pool with environment variables
+// - Export pool for use in models
