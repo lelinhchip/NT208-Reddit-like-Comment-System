@@ -104,7 +104,7 @@ docker-compose down
 ```
 
 **URLs**:
-- Frontend: http://localhost:3000
+- Frontend: http://localhost:5173
 - Backend: http://localhost:5000
 - Database: localhost:3306
 
@@ -215,10 +215,10 @@ VITE_API_URL=http://localhost:5000
 **Port already in use:**
 ```bash
 # Kill process on port
-Windows: netstat -ano | findstr :3000
+Windows: netstat -ano | findstr :5173
          taskkill /PID <PID> /F
 
-macOS/Linux: lsof -i :3000
+macOS/Linux: lsof -i :5173
              kill -9 <PID>
 ```
 
