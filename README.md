@@ -58,7 +58,7 @@ NT208-Reddit-like-Comment-System/
 │   ├── .env                     # Config (ready)
 │   └── Dockerfile               # Docker config (ready)
 ├── database/
-│   └── init.sql                 # Schema (ready)
+│   └── reddit_db.sql                 # Schema (ready)
 ├── docker-compose.yml           # Docker compose (ready)
 ├── .gitignore                   # Git config (ready)
 ├── .env.example                 # Config template (ready)
