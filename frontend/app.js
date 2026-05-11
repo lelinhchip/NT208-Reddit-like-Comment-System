@@ -1,4 +1,4 @@
-const API = 'http://localhost:3000/api';
+const API = 'http://localhost:5000/api';
 const USER_ID = 99; 
 
 async function loadPosts(sort = 'new') {
