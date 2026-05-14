@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 const { pool } = require('../config/db');
 
 class Post {
@@ -60,8 +59,7 @@ class Post {
      * @param {Object} options - Tùy chọn phân trang và lọc
      * @param {number} options.page - Số trang (mặc định: 1)
      * @param {number} options.limit - Số bài đăng mỗi trang (mặc định: 10)
-     * @param {string} options.sortBy - Sắp xếp theo (created_at, vote_count, comment_count)
-     * @param {string} options.order - Thứ tự sắp xếp (ASC, DESC)
+     * @param {string} options.sort - Kiểu sắp xếp ('new' hoặc 'top')
      * @returns {Promise<Object>} - Danh sách bài đăng và thông tin phân trang
      */
     static async getAll(options = {}) {
@@ -69,19 +67,20 @@ class Post {
             const page = parseInt(options.page) || 1;
             const limit = parseInt(options.limit) || 10;
             const offset = (page - 1) * limit;
-            const sortBy = options.sortBy || 'created_at';
-            const order = options.order || 'DESC';
+            const sort = options.sort || 'new';
             
-            // Validate sortBy để tránh SQL injection
-            const validSortColumns = ['created_at', 'vote_count', 'comment_count', 'title'];
-            const finalSortBy = validSortColumns.includes(sortBy) ? sortBy : 'created_at';
+            // Xác định thứ tự sắp xếp dựa trên tham số sort
+            let orderBy = 'p.created_at DESC';
+            if (sort === 'top') {
+                orderBy = 'p.vote_count DESC, p.comment_count DESC';
+            }
             
             const [rows] = await pool.execute(
                 `SELECT p.*, u.username, u.avatar_url,
                         (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as actual_comment_count
                  FROM posts p 
                  JOIN users u ON p.user_id = u.id 
-                 ORDER BY ${finalSortBy} ${order}
+                 ORDER BY ${orderBy}
                  LIMIT ? OFFSET ?`,
                 [limit, offset]
             );
@@ -180,8 +179,6 @@ class Post {
                 [id, userId]
             );
             
-            let newVoteCount = post.vote_count;
-            
             if (existing.length > 0) {
                 const oldVoteType = existing[0].vote_type;
                 
@@ -191,14 +188,12 @@ class Post {
                         'DELETE FROM post_votes WHERE post_id = ? AND user_id = ?',
                         [id, userId]
                     );
-                    newVoteCount = post.vote_count - voteType;
                 } else {
                     // Đổi vote (upvote -> downvote hoặc ngược lại)
                     await pool.execute(
                         'UPDATE post_votes SET vote_type = ? WHERE post_id = ? AND user_id = ?',
                         [voteType, id, userId]
                     );
-                    newVoteCount = post.vote_count + (voteType * 2);
                 }
             } else {
                 // Thêm vote mới
@@ -206,7 +201,6 @@ class Post {
                     'INSERT INTO post_votes (post_id, user_id, vote_type) VALUES (?, ?, ?)',
                     [id, userId, voteType]
                 );
-                newVoteCount = post.vote_count + voteType;
             }
             
             // Lấy vote_count đã được trigger cập nhật
@@ -361,28 +355,5 @@ class Post {
         }
     }
 }
-=======
-const db = require('../config/db');
-
-const Post = {
-  getAll: (sort = 'new') => {
-    const order = sort === 'top' ? 'score DESC' : 'created_at DESC';
-    return db.query(`SELECT * FROM posts ORDER BY ${order}`);
-  },
-
-  getById: (id) => db.query('SELECT * FROM posts WHERE id = ?', [id]),
-
-  create: (user_id, title, content) =>
-    db.query('INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)', [user_id, title, content]),
-
-  update: (id, title, content) =>
-    db.query('UPDATE posts SET title=?, content=? WHERE id=?', [title, content, id]),
-
-  delete: (id) => db.query('DELETE FROM posts WHERE id=?', [id]),
-
-  getByUserId: (user_id) =>
-    db.query('SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC', [user_id]),
-};
->>>>>>> 398ffd25bff2e22c1cb21044608144852da4d36c
 
 module.exports = Post;
