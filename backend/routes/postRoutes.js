@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+<<<<<<< HEAD
 const postController = require('../controllers/postController');
 const { authenticateToken } = require('../middleware/auth');
 
@@ -92,5 +93,20 @@ router.delete('/:id', authenticateToken, postController.deletePost);
  * @returns {Object} Thông tin vote mới
  */
 router.post('/:id/vote', authenticateToken, postController.votePost);
+=======
+const ctrl = require('../controllers/postController');
+const voteCtrl = require('../controllers/voteController');
+const { authenticate } = require('../middleware/auth');
+
+// Public routes
+router.get('/', ctrl.getAllPosts);
+router.get('/:id', ctrl.getPost);
+
+// Protected routes (cần token)
+router.post('/', authenticate, ctrl.createPost);
+router.put('/:id', authenticate, ctrl.updatePost);
+router.delete('/:id', authenticate, ctrl.deletePost);
+router.post('/:post_id/vote', authenticate, voteCtrl.vote);
+>>>>>>> 398ffd25bff2e22c1cb21044608144852da4d36c
 
 module.exports = router;

@@ -7,6 +7,8 @@ app.use(cors());
 app.use(express.json());
 
 // Import routes
+const userRoutes = require('./routes/userRoutes');
+const postRoutes = require('./routes/postRoutes');
 const commentRoutes = require('./routes/commentRoutes');
 
 app.get('/', (req, res) => {
@@ -14,6 +16,8 @@ app.get('/', (req, res) => {
 });
 
 // Use routes
+app.use('/api/users', userRoutes);
+app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
 
 const PORT = process.env.PORT || 5000;

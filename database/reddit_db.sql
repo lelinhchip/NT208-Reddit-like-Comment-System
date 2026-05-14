@@ -1,12 +1,11 @@
--- Xóa database nếu tồn tại.
 DROP DATABASE IF EXISTS reddit_db;
 
---Tạo database mới.
 CREATE DATABASE reddit_db;
 USE reddit_db;
 
---Tạo bảng Users.
-CREATE TABLE users (
+
+CREATE TABLE users 
+(
     id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(50) UNIQUE NOT NULL,
@@ -16,8 +15,9 @@ CREATE TABLE users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
---Tạo bảng Posts.
-CREATE TABLE posts (
+
+CREATE TABLE posts 
+(
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     title VARCHAR(300) NOT NULL,
@@ -29,8 +29,9 @@ CREATE TABLE posts (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
---Tạo bảng Comments.
-CREATE TABLE comments (
+
+CREATE TABLE comments 
+(
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     post_id INT NOT NULL,
@@ -44,8 +45,9 @@ CREATE TABLE comments (
     FOREIGN KEY (parent_comment_id) REFERENCES comments(id) ON DELETE CASCADE
 );
 
---Tạo bảng CommentVotes.
-CREATE TABLE comment_votes (
+
+CREATE TABLE comment_votes 
+(
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     comment_id INT NOT NULL,
@@ -56,8 +58,9 @@ CREATE TABLE comment_votes (
     UNIQUE KEY unique_user_comment_vote (user_id, comment_id)
 );
 
---Tạo bảng PostVotes.
-CREATE TABLE post_votes (
+
+CREATE TABLE post_votes 
+(
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     post_id INT NOT NULL,
@@ -68,29 +71,28 @@ CREATE TABLE post_votes (
     UNIQUE KEY unique_user_post_vote (user_id, post_id)
 );
 
---Index bảng Users.
+
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_created_at ON users(created_at);
 
---Index bảng Posts.
+
 CREATE INDEX idx_posts_user_id ON posts(user_id);
 CREATE INDEX idx_posts_created_at ON posts(created_at);
 CREATE INDEX idx_posts_vote_count ON posts(vote_count);
 
---Index bảng Comments.
 CREATE INDEX idx_comments_post_id ON comments(post_id);
 CREATE INDEX idx_comments_user_id ON comments(user_id);
 CREATE INDEX idx_comments_parent_comment_id ON comments(parent_comment_id);
 CREATE INDEX idx_comments_created_at ON comments(created_at);
 
---Index bảng CommentVotes và PostVotes.
+
 CREATE INDEX idx_comment_votes_comment_id ON comment_votes(comment_id);
 CREATE INDEX idx_comment_votes_user_id ON comment_votes(user_id);
 CREATE INDEX idx_post_votes_post_id ON post_votes(post_id);
 CREATE INDEX idx_post_votes_user_id ON post_votes(user_id);
 
---Trigger cập nhật vote_count cho post khi có vote mới. 
+
 DELIMITER $$
 CREATE TRIGGER after_post_vote_insert
 AFTER INSERT ON post_votes
@@ -101,7 +103,7 @@ BEGIN
     WHERE id = NEW.post_id;
 END$$
 
---Trigger cập nhật vote_count cho post khi có vote bị xóa.
+
 CREATE TRIGGER after_post_vote_delete
 AFTER DELETE ON post_votes
 FOR EACH ROW
@@ -111,7 +113,7 @@ BEGIN
     WHERE id = OLD.post_id;
 END$$
 
---Trigger cập nhật vote_count cho comment khi có vote mới.
+
 CREATE TRIGGER after_comment_vote_insert
 AFTER INSERT ON comment_votes
 FOR EACH ROW
@@ -121,7 +123,7 @@ BEGIN
     WHERE id = NEW.comment_id;
 END$$
 
---Trigger cập nhật vote_count cho comment khi có vote bị xóa.
+
 CREATE TRIGGER after_comment_vote_delete
 AFTER DELETE ON comment_votes
 FOR EACH ROW
@@ -131,7 +133,7 @@ BEGIN
     WHERE id = OLD.comment_id;
 END$$
 
---Trigger cập nhật comment_count cho post khi có comment mới.
+
 CREATE TRIGGER after_comment_insert
 AFTER INSERT ON comments
 FOR EACH ROW
@@ -141,7 +143,7 @@ BEGIN
     WHERE id = NEW.post_id;
 END$$
 
---Trigger cập nhật comment_count cho post khi có comment bị xóa.
+
 CREATE TRIGGER after_comment_delete
 AFTER DELETE ON comments
 FOR EACH ROW

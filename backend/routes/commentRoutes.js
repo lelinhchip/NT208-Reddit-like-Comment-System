@@ -1,35 +1,17 @@
-// TODO: Implement comment routes
-// - POST /
-// - GET /post/:postId
-// - GET /:id
-// - GET /:commentId/replies
-// - PUT /:id
-// - DELETE /:id
-// - POST /:id/vote
-
 const express = require('express');
 const router = express.Router();
 const commentController = require('../controllers/commentController');
+const { authenticate } = require('../middleware/auth');
 
-// 1. Tạo bình luận mới 
-router.post('/', commentController.createComment);
-
-// 2. Lấy tất cả bình luận của một bài viết (Dạng cây)
+// Public routes
 router.get('/post/:postId', commentController.getCommentsByPost);
-
-// 3. Lấy chi tiết một bình luận
 router.get('/:id', commentController.getCommentById);
-
-// 4. Lấy các Replies của một bình luận
 router.get('/:commentId/replies', commentController.getReplies);
 
-// 5. Cập nhật bình luận
-router.put('/:id', commentController.updateComment);
-
-// 6. Xóa bình luận
-router.delete('/:id', commentController.deleteComment);
-
-// 7. Vote cho bình luận (Upvote/Downvote)
-router.post('/:id/vote', commentController.voteComment);
+// Protected routes (cần token)
+router.post('/', authenticate, commentController.createComment);
+router.put('/:id', authenticate, commentController.updateComment);
+router.delete('/:id', authenticate, commentController.deleteComment);
+router.post('/:id/vote', authenticate, commentController.voteComment);
 
 module.exports = router;

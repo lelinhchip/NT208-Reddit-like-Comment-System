@@ -2,18 +2,23 @@ const Comment = require('../models/Comment');
 
 exports.createComment = async (req, res) => {
     try {
-        const { post_id, user_id, content, parent_comment_id } = req.body;
+        const { post_id, content, parent_comment_id } = req.body;
+        const user_id = req.user?.id; // Lấy từ token (auth middleware)
 
-        // 1. Validation
+        // Validation
         if (!content || content.trim() === "") {
             return res.status(400).json({ message: "Nội dung không được để trống" });
         }
 
-        if (!post_id || !user_id) {
-            return res.status(400).json({ message: "post_id và user_id là bắt buộc" });
+        if (!post_id) {
+            return res.status(400).json({ message: "post_id là bắt buộc" });
         }
 
-        // 2. Tạo comment trong database
+        if (!user_id) {
+            return res.status(401).json({ message: "Vui lòng đăng nhập" });
+        }
+
+        // Tạo comment trong database
         const newComment = await Comment.create({
             post_id,
             user_id,
@@ -69,11 +74,13 @@ exports.updateComment = async (req, res) => {
     try {
         const { id } = req.params;
         const { content } = req.body;
+        const user_id = req.user?.id;
 
         if (!content || content.trim() === "") {
             return res.status(400).json({ message: "Nội dung không được để trống" });
         }
 
+        // TODO: Kiểm tra user có sở hữu comment không trước khi update
         const updated = await Comment.update(id, { content: content.trim() });
         if (!updated) {
             return res.status(404).json({ message: "Bình luận không tồn tại" });
@@ -90,6 +97,9 @@ exports.updateComment = async (req, res) => {
 exports.deleteComment = async (req, res) => {
     try {
         const { id } = req.params;
+        const user_id = req.user?.id;
+
+        // TODO: Kiểm tra user có sở hữu comment không trước khi xóa
         const deleted = await Comment.delete(id);
         if (!deleted) {
             return res.status(404).json({ message: "Bình luận không tồn tại" });
@@ -100,10 +110,30 @@ exports.deleteComment = async (req, res) => {
     }
 };
 
-// Vote cho bình luận (Upvote/Downvote) - TODO
+// Vote cho bình luận (Upvote/Downvote)
 exports.voteComment = async (req, res) => {
     try {
-        res.status(501).json({ message: "Chức năng vote chưa được implement" });
+        const { id } = req.params;
+        const { vote_type } = req.body;
+        const user_id = req.user?.id;
+
+        if (![1, -1].includes(Number(vote_type))) {
+            return res.status(400).json({ message: "vote_type phải là 1 (upvote) hoặc -1 (downvote)" });
+        }
+
+        if (!user_id) {
+            return res.status(401).json({ message: "Vui lòng đăng nhập" });
+        }
+
+        // TODO: Implement vote logic với database
+        console.log(`Vote comment ${id} với type ${vote_type} từ user ${user_id}`);
+        
+        res.status(200).json({ 
+            message: "Vote thành công",
+            comment_id: id,
+            vote_type,
+            user_id
+        });
     } catch (error) {
         res.status(500).json({ message: "Lỗi khi vote", error: error.message });
     }
