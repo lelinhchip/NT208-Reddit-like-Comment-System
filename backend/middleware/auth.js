@@ -1,29 +1,26 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
-// Middleware kiểm tra token
-exports.authenticate = (req, res, next) => {
-  try {
-    const token = req.headers.authorization?.split(' ')[1]; // Bearer <token>
-    
     if (!token) {
-      return res.status(401).json({ message: 'Không có token, vui lòng đăng nhập' });
+        return res.status(401).json({
+            success: false,
+            message: 'Không tìm thấy token. Vui lòng đăng nhập.'
+        });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    res.status(401).json({ message: 'Token không hợp lệ hoặc hết hạn' });
-  }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_secret_key');
+        req.user = { id: decoded.userId || decoded.id };
+        next();
+    } catch (error) {
+        return res.status(403).json({
+            success: false,
+            message: 'Token không hợp lệ hoặc đã hết hạn'
+        });
+    }
 };
 
-// Hàm tạo JWT token
-exports.generateToken = (userId, username) => {
-  return jwt.sign(
-    { id: userId, username },
-    JWT_SECRET,
-    { expiresIn: '24h' }
-  );
-};
+module.exports = { authenticateToken };

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const postController = require('../controllers/postController');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken } = require('./middleware/auth');
 
 router.get('/', postController.getAllPosts);
 router.get('/top', postController.getTopPosts);
