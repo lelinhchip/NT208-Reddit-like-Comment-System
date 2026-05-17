@@ -6,7 +6,9 @@ const { authenticate } = require('../middleware/auth');
 // Public routes
 router.get('/post/:postId', commentController.getCommentsByPost);
 router.get('/:id', commentController.getCommentById);
-router.get('/:commentId/replies', commentController.getReplies);
+router.get('/post/:postId/search', commentController.searchInComments);
+router.get('/post/:postId/comment/:id/count', commentController.countTotalReplies);
+router.get('/post/:postId/comment/:id/participants', commentController.getThreadParticipants);
 
 // Protected routes (cần token)
 router.post('/', authenticate, commentController.createComment);

@@ -13,7 +13,7 @@ const CommentForm = ({ postId, parentId = null, onSuccess, onCancel }) => {
     try {
       await createComment({
         post_id: postId,
-        parent_id: parentId,
+        parent_comment_id: parentId,
         content: content.trim()
       });
       setContent('');

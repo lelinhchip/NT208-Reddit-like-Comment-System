@@ -16,9 +16,7 @@ const CommentList = ({ postId, refreshTrigger }) => {
     setError(null);
     try {
       const data = await getCommentsByPostId(postId);
-      // Chuyển đổi dữ liệu flat thành nested tree
-      const nestedComments = buildCommentTree(data);
-      setComments(nestedComments);
+      setComments(data);
     } catch (err) {
       console.error('Lỗi tải comment:', err);
       setError(err.message || 'Không thể tải bình luận');
@@ -26,37 +24,6 @@ const CommentList = ({ postId, refreshTrigger }) => {
       setLoading(false);
     }
   }, [postId]);
-
-  // Hàm chuyển đổi flat array thành nested tree
-  const buildCommentTree = (flatComments) => {
-    const commentMap = {};
-    const roots = [];
-
-    // Tạo map cho tất cả comments
-    flatComments.forEach(comment => {
-      commentMap[comment.id] = { ...comment, replies: [] };
-    });
-
-    // Xây dựng cây
-    flatComments.forEach(comment => {
-      if (comment.parent_id === null || !commentMap[comment.parent_id]) {
-        roots.push(commentMap[comment.id]);
-      } else {
-        commentMap[comment.parent_id].replies.push(commentMap[comment.id]);
-      }
-    });
-
-    // Sắp xếp theo thời gian (cũ lên trước hoặc mới lên trước)
-    const sortComments = (items) => {
-      items.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-      items.forEach(item => {
-        if (item.replies?.length) sortComments(item.replies);
-      });
-    };
-    sortComments(roots);
-
-    return roots;
-  };
 
   // Xử lý khi xóa comment
   const handleDeleteComment = (commentId) => {

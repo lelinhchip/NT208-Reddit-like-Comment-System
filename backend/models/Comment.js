@@ -44,33 +44,20 @@ class Comment {
         }
     }
 
-    // Lấy các comment của một bài post
+    // Lấy tất cả comment của một bài post (Dữ liệu phẳng)
     static async getByPostId(postId) {
         try {
             const query = `
-                SELECT * FROM comments 
-                WHERE post_id = ? AND parent_comment_id IS NULL
-                ORDER BY created_at DESC
+                SELECT c.*, u.username, u.avatar_url 
+                FROM comments c
+                LEFT JOIN users u ON c.user_id = u.id
+                WHERE c.post_id = ? 
+                ORDER BY c.created_at ASC
             `;
             const [rows] = await pool.execute(query, [postId]);
             return rows;
         } catch (error) {
             throw new Error(`Lỗi lấy comment theo post: ${error.message}`);
-        }
-    }
-
-    // Lấy các reply của một comment
-    static async getReplies(parentCommentId) {
-        try {
-            const query = `
-                SELECT * FROM comments 
-                WHERE parent_comment_id = ?
-                ORDER BY created_at ASC
-            `;
-            const [rows] = await pool.execute(query, [parentCommentId]);
-            return rows;
-        } catch (error) {
-            throw new Error(`Lỗi lấy reply: ${error.message}`);
         }
     }
 
