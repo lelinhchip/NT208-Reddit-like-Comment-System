@@ -46,7 +46,7 @@ exports.getCommentsByPost = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: "Lỗi khi lấy bình luận", error: error.message });
     }
-}
+};
 
 // Lấy chi tiết một bình luận
 exports.getCommentById = async (req, res) => {
