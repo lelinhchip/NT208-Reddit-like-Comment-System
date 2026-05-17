@@ -6,14 +6,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// TODO: Import and use routes
-// app.use('/api/users', userRoutes);
-// app.use('/api/posts', postRoutes);
-// app.use('/api/comments', commentRoutes);
+// Import routes
+const userRoutes = require('./routes/userRoutes');
+const postRoutes = require('./routes/postRoutes');
+const commentRoutes = require('./routes/commentRoutes');
 
 app.get('/', (req, res) => {
     res.send('Server Reddit-Clone');
 });
+
+// Use routes
+app.use('/api/users', userRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/comments', commentRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
