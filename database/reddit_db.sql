@@ -1,7 +1,7 @@
-DROP DATABASE IF EXISTS reddit_db;
+DROP DATABASE IF EXISTS reddit_clone;
 
-CREATE DATABASE reddit_db;
-USE reddit_db;
+CREATE DATABASE reddit_clone;
+USE reddit_clone;
 
 
 CREATE TABLE users 
