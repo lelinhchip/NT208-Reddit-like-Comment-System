@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const commentController = require('../controllers/commentController');
-const { authenticate } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 // Public routes
 router.get('/post/:postId', commentController.getCommentsByPost);
@@ -11,9 +11,9 @@ router.get('/post/:postId/comment/:id/count', commentController.countTotalReplie
 router.get('/post/:postId/comment/:id/participants', commentController.getThreadParticipants);
 
 // Protected routes (cần token)
-router.post('/', authenticate, commentController.createComment);
-router.put('/:id', authenticate, commentController.updateComment);
-router.delete('/:id', authenticate, commentController.deleteComment);
-router.post('/:id/vote', authenticate, commentController.voteComment);
+router.post('/', authenticateToken, commentController.createComment);
+router.put('/:id', authenticateToken, commentController.updateComment);
+router.delete('/:id', authenticateToken, commentController.deleteComment);
+router.post('/:id/vote', authenticateToken, commentController.voteComment);
 
 module.exports = router;
