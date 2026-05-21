@@ -1,12 +1,13 @@
-import { Search, ArrowUp, ArrowDown, MessageSquare } from 'lucide-react';
+import { Search, ArrowUp, ArrowDown, MessageSquare, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getAllPosts } from '../../api/postApi';
 
 interface PostListScreenProps {
     onPostClick: (postId: string) => void;
+    onCreatePostClick: () => void;
 }
 
-export function PostListScreen({ onPostClick }: PostListScreenProps) {
+export function PostListScreen({ onPostClick, onCreatePostClick }: PostListScreenProps) {
     const [posts, setPosts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -63,6 +64,15 @@ export function PostListScreen({ onPostClick }: PostListScreenProps) {
                         ))}
                     </div>
                 )}
+
+                {/* Floating Create Post Button */}
+                <button
+                    onClick={onCreatePostClick}
+                    className="fixed bottom-8 right-8 w-14 h-14 bg-[#FF4500] hover:bg-[#ff5722] rounded-full flex items-center justify-center shadow-lg transition-colors z-20"
+                    title="Create Post"
+                >
+                    <Plus className="w-6 h-6 text-white" />
+                </button>
             </div>
         </div>
     );
