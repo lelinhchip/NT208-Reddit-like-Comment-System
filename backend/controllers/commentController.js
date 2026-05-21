@@ -73,7 +73,15 @@ exports.updateComment = async (req, res) => {
             return res.status(400).json({ message: "Nội dung không được để trống" });
         }
 
-        // TODO: Kiểm tra user có sở hữu comment không trước khi update
+        const existingComment = await Comment.findById(id);
+        if (!existingComment) {
+            return res.status(404).json({ message: "Bình luận không tồn tại" });
+        }
+
+        if (existingComment.user_id !== user_id) {
+            return res.status(403).json({ message: "Bạn không có quyền chỉnh sửa bình luận này" });
+        }
+
         const updated = await Comment.update(id, { content: content.trim() });
         if (!updated) {
             return res.status(404).json({ message: "Bình luận không tồn tại" });
@@ -93,7 +101,16 @@ exports.deleteComment = async (req, res) => {
         const { id } = req.params;
         const user_id = req.user?.id;
 
-        // TODO: Kiểm tra user có sở hữu comment không trước khi xóa
+        const existingComment = await Comment.findById(id);
+        if (!existingComment) {
+            return res.status(404).json({ message: "Bình luận không tồn tại" });
+        }
+
+        // Kiểm tra quyền sở hữu
+        if (existingComment.user_id !== user_id) {
+            return res.status(403).json({ message: "Bạn không có quyền xóa bình luận này" });
+        }
+
         const deleted = await Comment.delete(id);
         if (!deleted) {
             return res.status(404).json({ message: "Bình luận không tồn tại" });
@@ -118,16 +135,31 @@ exports.voteComment = async (req, res) => {
         if (!user_id) {
             return res.status(401).json({ message: "Vui lòng đăng nhập" });
         }
+        // Kiểm tra bình luận có tồn tại không
+        const comment = await Comment.findById(id);
+        if (!comment) {
+            return res.status(404).json({ message: "Bình luận không tồn tại" });
+        }
 
-        // TODO: Implement vote logic với database
-        console.log(`Vote comment ${id} với type ${vote_type} từ user ${user_id}`);
-        
-        res.status(200).json({ 
-            message: "Vote thành công",
-            comment_id: id,
-            vote_type,
-            user_id
-        });
+        // Kiểm tra user đã vote bình luận này chưa
+        const existingVote = await CommentVote.findByUserAndComment(user_id, id);
+
+        if (existingVote) {
+            if (existingVote.vote_type === Number(vote_type)) {
+                // Nếu bấm lại vote cũ -> Hủy vote (Delete)
+                await CommentVote.delete(existingVote.id);
+                res.status(200).json({ message: "Đã hủy vote", action: "removed" });
+            } else {
+                // Nếu đổi từ upvote sang downvote hoặc ngược lại -> Update
+                await CommentVote.update(existingVote.id, Number(vote_type));
+                res.status(200).json({ message: "Đã thay đổi vote", action: "updated" });
+            }
+        } else {
+            // Chưa vote -> Tạo mới (Insert)
+            await CommentVote.create({ user_id, comment_id: id, vote_type: Number(vote_type) });
+            res.status(201).json({ message: "Vote thành công", action: "created" });
+        }
+
     } catch (error) {
         res.status(500).json({ message: "Lỗi khi vote", error: error.message });
     }
