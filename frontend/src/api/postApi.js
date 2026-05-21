@@ -1,63 +1,89 @@
 import client from './client';
 
-// 1. Lấy tất cả posts (có phân trang)
-export const getAllPosts = async (limit = 20, offset = 0) => {
+export const getAllPosts = async ({ page = 1, limit = 10, sort = 'new' } = {}) => {
   try {
     const response = await client.get('/posts', {
-      params: { limit, offset }
+      params: { page, limit, sort },
     });
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: 'Lỗi lấy danh sách posts' };
+    throw getApiError(error, 'Lỗi lấy danh sách bài đăng');
   }
+};
+
+export const getTopPosts = async (limit = 5) => {
+    try {
+        const response = await client.get('/posts/top', { params: { limit } });
+        return response.data;
+    } catch (error) {
+        throw getApiError(error, 'Lỗi lấy bài đăng nổi bật');
+    }
+};
+
+export const searchPosts = async (q, { page = 1, limit = 10 } = {}) => {
+    try {
+        const response = await client.get('/posts/search', {
+            params: { q, page, limit },
+        });
+        return response.data;
+    } catch (error) {
+        throw getApiError(error, 'Lỗi tìm kiếm bài đăng');
+    }
+};
+
+export const getUserPosts = async (userId, { page = 1, limit = 10 } = {}) => {
+    try {
+        const response = await client.get(`/posts/user/${userId}`, {
+            params: { page, limit },
+        });
+        return response.data;
+    } catch (error) {
+        throw getApiError(error, 'Lỗi lấy bài đăng của người dùng');
+    }
 };
 
 // 2. Lấy chi tiết post theo ID
 export const getPostById = async (id) => {
-  try {
-    const response = await client.get(`/posts/${id}`);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: 'Lỗi lấy chi tiết post' };
-  }
+    try {
+        const response = await client.get(`/posts/${id}`);
+        return response.data;
+    } catch (error) {
+        throw getApiError(error, 'Lỗi lấy chi tiết bài đăng');
+    }
 };
 
-// 3. Tạo post mới
-export const createPost = async (postData) => {
-  try {
-    const response = await client.post('/posts', postData);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: 'Lỗi tạo post' };
-  }
+export const createPost = async ({ title, content }) => {
+    try {
+        const response = await client.post('/posts', { title, content });
+        return response.data;
+    } catch (error) {
+        throw getApiError(error, 'Lỗi tạo bài đăng');
+    }
 };
 
-// 4. Cập nhật post
-export const updatePost = async (id, postData) => {
-  try {
-    const response = await client.put(`/posts/${id}`, postData);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: 'Lỗi cập nhật post' };
-  }
+export const updatePost = async (id, { title, content }) => {
+    try {
+        const response = await client.put(`/posts/${id}`, { title, content });
+        return response.data;
+    } catch (error) {
+        throw getApiError(error, 'Lỗi cập nhật bài đăng');
+    }
 };
 
-// 5. Xóa post
 export const deletePost = async (id) => {
-  try {
-    const response = await client.delete(`/posts/${id}`);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: 'Lỗi xóa post' };
-  }
+    try {
+        const response = await client.delete(`/posts/${id}`);
+        return response.data;
+    } catch (error) {
+        throw getApiError(error, 'Lỗi xóa bài đăng');
+    }
 };
 
-// 6. Vote post (upvote/downvote)
 export const votePost = async (id, voteType) => {
-  try {
-    const response = await client.post(`/posts/${id}/vote`, { vote_type: voteType });
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: 'Lỗi vote post' };
-  }
+    try {
+        const response = await client.post(`/posts/${id}/vote`, { voteType: Number(voteType) });
+        return response.data;
+    } catch (error) {
+        throw getApiError(error, 'Lỗi vote bài đăng');
+    }
 };

@@ -1,68 +1,67 @@
 import { ArrowUp, ArrowDown, MessageSquare, Share2 } from 'lucide-react';
 
 interface PostProps {
-  community: string;
-  username: string;
-  timestamp: string;
-  title: string;
-  body: string;
-  upvotes: number;
-  commentCount: number;
+    community?: string;
+    username?: string;
+    timestamp?: string;
+    title: string;
+    body: string;
+    upvotes?: number;
+    commentCount?: number;
+    onUpvote?: () => void;
+    onDownvote?: () => void;
 }
 
 export function Post({
-  community,
-  username,
-  timestamp,
-  title,
-  body,
-  upvotes,
-  commentCount
+    community = 'r/general',
+    username = 'Anonymous',
+    timestamp = 'vừa xong',
+    title,
+    body,
+    upvotes = 0,
+    commentCount = 0,
+    onUpvote,
+    onDownvote,
 }: PostProps) {
-  return (
-    <div className="bg-white border border-border rounded-lg p-4 mb-4">
-      {/* Post Header */}
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-          <span className="text-white text-sm font-medium">r/</span>
+    return (
+        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 mb-4">
+            <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+                    <span className="text-white text-sm font-medium">r/</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                    <span className="font-semibold text-white">{community}</span>
+                    <span className="text-gray-600">•</span>
+                    <span className="text-gray-400">Posted by u/{username}</span>
+                    <span className="text-gray-600">•</span>
+                    <span className="text-gray-400">{timestamp}</span>
+                </div>
+            </div>
+
+            <h1 className="mb-3 text-white text-xl font-bold">{title}</h1>
+            <p className="text-gray-300 mb-4 leading-relaxed whitespace-pre-wrap">{body}</p>
+
+            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 bg-[#0a0a0a] rounded-full px-3 py-1.5">
+                    <button onClick={onUpvote} className="text-gray-400 hover:text-orange-500 transition-colors">
+                        <ArrowUp className="w-5 h-5" />
+                    </button>
+                    <span className="text-white font-medium min-w-[2rem] text-center">{upvotes}</span>
+                    <button onClick={onDownvote} className="text-gray-400 hover:text-blue-500 transition-colors">
+                        <ArrowDown className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <button className="flex items-center gap-2 text-gray-400 hover:bg-[#0a0a0a] px-3 py-1.5 rounded-full transition-colors">
+                    <MessageSquare className="w-5 h-5" />
+                    <span className="font-medium">{commentCount} Comments</span>
+                </button>
+
+                <button className="flex items-center gap-2 text-gray-400 hover:bg-[#0a0a0a] px-3 py-1.5 rounded-full transition-colors">
+                    <Share2 className="w-5 h-5" />
+                    <span className="font-medium">Share</span>
+                </button>
+            </div>
         </div>
-        <div className="flex items-center gap-2 text-sm">
-          <span className="font-semibold">{community}</span>
-          <span className="text-muted-foreground">•</span>
-          <span className="text-muted-foreground">Posted by u/{username}</span>
-          <span className="text-muted-foreground">•</span>
-          <span className="text-muted-foreground">{timestamp}</span>
-        </div>
-      </div>
-
-      {/* Post Title */}
-      <h1 className="mb-3">{title}</h1>
-
-      {/* Post Body */}
-      <p className="text-foreground mb-4 leading-relaxed">{body}</p>
-
-      {/* Action Bar */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 bg-muted rounded-full px-3 py-1.5">
-          <button className="hover:text-orange-500 transition-colors">
-            <ArrowUp className="w-5 h-5" />
-          </button>
-          <span className="font-medium min-w-[2rem] text-center">{upvotes}</span>
-          <button className="hover:text-blue-500 transition-colors">
-            <ArrowDown className="w-5 h-5" />
-          </button>
-        </div>
-
-        <button className="flex items-center gap-2 hover:bg-muted px-3 py-1.5 rounded-full transition-colors">
-          <MessageSquare className="w-5 h-5" />
-          <span className="font-medium">{commentCount} Comments</span>
-        </button>
-
-        <button className="flex items-center gap-2 hover:bg-muted px-3 py-1.5 rounded-full transition-colors">
-          <Share2 className="w-5 h-5" />
-          <span className="font-medium">Share</span>
-        </button>
-      </div>
-    </div>
-  );
+    );
 }

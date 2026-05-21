@@ -4,45 +4,66 @@ import { RegistrationScreen } from './components/RegistrationScreen';
 import { PostListScreen } from './components/PostListScreen';
 import { PostDetailScreen } from './components/PostDetailScreen';
 import { CreatePostScreen } from './components/CreatePostScreen';
-import { isAuthenticated } from '../api/userApi'; // Import hàm check token
+import { getCurrentUser, isAuthenticated, logoutUser } from '../api/userApi';
 
 type Screen = 'login' | 'register' | 'postList' | 'postDetail' | 'createPost';
 
 export default function App() {
-    // Nếu đã có token thì vào thẳng PostList, chưa có thì Login
     const [currentScreen, setCurrentScreen] = useState<Screen>(isAuthenticated() ? 'postList' : 'login');
     const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+    const [currentUser, setCurrentUser] = useState<any>(getCurrentUser());
 
-    const handlePostClick = (id: string) => {
-        setSelectedPostId(id);
+    const goToPost = (postId: string | number) => {
+        setSelectedPostId(String(postId));
         setCurrentScreen('postDetail');
     };
 
+    const handleAuthSuccess = () => {
+        setCurrentUser(getCurrentUser());
+        setCurrentScreen('postList');
+    };
+
+    const handleLogout = () => {
+        logoutUser();
+        setCurrentUser(null);
+        setSelectedPostId(null);
+        setCurrentScreen('login');
+    };
+
     return (
-        <div className="size-full">
+        <div className="size-full min-h-screen bg-[#0a0a0a]">
             {currentScreen === 'login' && (
-                <LoginScreen onLogin={() => setCurrentScreen('postList')}
-                onCreateAccountClick={() => setCurrentScreen('register')}
+                <LoginScreen
+                    onLogin={handleAuthSuccess}
+                    onCreateAccountClick={() => setCurrentScreen('register')}
                 />
             )}
 
             {currentScreen === 'register' && (
                 <RegistrationScreen
-                    onSignUp={() => setCurrentScreen('postList')}
+                    onSignUp={handleAuthSuccess}
                     onLoginClick={() => setCurrentScreen('login')}
                 />
             )}
 
             {currentScreen === 'postList' && (
                 <PostListScreen
-                    onPostClick={() => setCurrentScreen('postDetail')}
+                    user={currentUser}
+                    onLogout={handleLogout}
+                    onPostClick={goToPost}
                     onCreatePostClick={() => setCurrentScreen('createPost')}
                 />
             )}
 
             {currentScreen === 'createPost' && (
                 <CreatePostScreen
-                    onPost={() => setCurrentScreen('postList')}
+                    onPost={(postId?: string | number) => {
+                        if (postId) {
+                            goToPost(postId);
+                        } else {
+                            setCurrentScreen('postList');
+                        }
+                    }}
                     onCancel={() => setCurrentScreen('postList')}
                 />
             )}
@@ -50,7 +71,9 @@ export default function App() {
             {currentScreen === 'postDetail' && selectedPostId && (
                 <PostDetailScreen
                     postId={selectedPostId}
+                    user={currentUser}
                     onBack={() => setCurrentScreen('postList')}
+                    onLogout={handleLogout}
                 />
             )}
         </div>

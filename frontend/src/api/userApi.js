@@ -1,68 +1,67 @@
-import client from './client';
+import client, { getApiError } from './client';
 
-// 1. Đăng ký user mới
-export const registerUser = async (userData) => {
-  try {
-    const response = await client.post('/users/register', userData);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: 'Lỗi đăng ký' };
-  }
-};
-
-// 2. Đăng nhập
-export const loginUser = async (credentials) => {
-  try {
-    const response = await client.post('/users/login', credentials);
-    // Lưu token vào localStorage
-    if (response.data.token) {
-      localStorage.setItem('authToken', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+function persistAuth(data) {
+    if (data?.token) {
+        localStorage.setItem('authToken', data.token);
     }
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: 'Lỗi đăng nhập' };
-  }
+    if (data?.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+    }
+}
+
+export const registerUser = async ({ username, email, password }) => {
+    try {
+        const response = await client.post('/users/register', { username, email, password });
+        persistAuth(response.data);
+        return response.data;
+    } catch (error) {
+        throw getApiError(error, 'Lỗi đăng ký');
+    }
 };
 
-// 3. Lấy thông tin user theo ID
+export const loginUser = async ({ username, password }) => {
+    try {
+        const response = await client.post('/users/login', { username, password });
+        persistAuth(response.data);
+        return response.data;
+    } catch (error) {
+        throw getApiError(error, 'Lỗi đăng nhập');
+    }
+};
+
 export const getUserById = async (id) => {
-  try {
-    const response = await client.get(`/users/${id}`);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: 'Lỗi lấy thông tin user' };
-  }
+    try {
+        const response = await client.get(`/users/${id}`);
+        return response.data;
+    } catch (error) {
+        throw getApiError(error, 'Lỗi lấy thông tin user');
+    }
 };
 
-// 4. Lấy danh sách tất cả users
 export const getAllUsers = async () => {
-  try {
-    const response = await client.get('/users');
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: 'Lỗi lấy danh sách users' };
-  }
+    try {
+        const response = await client.get('/users');
+        return response.data;
+    } catch (error) {
+        throw getApiError(error, 'Lỗi lấy danh sách users');
+    }
 };
 
-// Logout
 export const logoutUser = () => {
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
 };
 
-// Lấy token từ localStorage
-export const getAuthToken = () => {
-  return localStorage.getItem('authToken');
-};
+export const getAuthToken = () => localStorage.getItem('authToken');
 
-// Lấy user hiện tại
 export const getCurrentUser = () => {
-  const user = localStorage.getItem('user');
-  return user ? JSON.parse(user) : null;
+    try {
+        const rawUser = localStorage.getItem('user');
+        return rawUser ? JSON.parse(rawUser) : null;
+    } catch {
+        localStorage.removeItem('user');
+        return null;
+    }
 };
 
-// Kiểm tra user đã đăng nhập chưa
-export const isAuthenticated = () => {
-  return !!localStorage.getItem('authToken');
-};
+export const isAuthenticated = () => Boolean(getAuthToken());
