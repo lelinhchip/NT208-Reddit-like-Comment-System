@@ -28,4 +28,7 @@ const testConnection = async () => {
     }
 };
 
-module.exports = { pool, testConnection };
+// Wrapper để sử dụng cùng API `db.query(...)` trong các model hiện tại
+const query = (...args) => pool.query(...args);
+
+module.exports = { pool, query, testConnection };

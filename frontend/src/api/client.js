@@ -38,4 +38,21 @@ client.interceptors.response.use(
   }
 );
 
+export function getApiError(error, defaultMessage = "Lỗi API") {
+	try {
+		if (!error) return new Error(defaultMessage);
+		const resp = error.response;
+		if (resp?.data) {
+			const data = resp.data;
+			if (typeof data === "string") return new Error(data);
+			if (data.message) return new Error(data.message);
+			if (data.error) return new Error(data.error);
+		}
+		if (error.message) return new Error(error.message);
+		return new Error(defaultMessage);
+	} catch {
+		return new Error(defaultMessage);
+	}
+}
+
 export default client;

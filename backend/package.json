@@ -20,5 +20,7 @@
     "jsonwebtoken": "^9.0.0",
     "mysql2": "^3.22.3"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
 }

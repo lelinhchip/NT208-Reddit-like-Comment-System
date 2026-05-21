@@ -75,14 +75,13 @@ class Post {
                 orderBy = 'p.vote_count DESC, p.comment_count DESC';
             }
             
-            const [rows] = await pool.execute(
+            const [rows] = await pool.query(
                 `SELECT p.*, u.username, u.avatar_url,
                         (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as actual_comment_count
                  FROM posts p 
                  JOIN users u ON p.user_id = u.id 
                  ORDER BY ${orderBy}
-                 LIMIT ? OFFSET ?`,
-                [limit, offset]
+                 LIMIT ${limit} OFFSET ${offset}`
             );
             
             // Đếm tổng số bài đăng

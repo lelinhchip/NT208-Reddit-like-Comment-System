@@ -22,6 +22,21 @@ function formatDate(value: string) {
     return date.toLocaleString();
 }
 
+// Đếm tất cả comments (main + replies)
+function countAllComments(comments: any[]): number {
+    let total = 0;
+    const traverse = (nodes: any[]) => {
+        nodes.forEach(comment => {
+            total += 1;
+            if (comment.replies && comment.replies.length > 0) {
+                traverse(comment.replies);
+            }
+        });
+    };
+    traverse(comments);
+    return total;
+}
+
 export function PostDetailScreen({ postId, user, onBack, onLogout }: PostDetailScreenProps) {
     const [post, setPost] = useState<any>(null);
     const [comments, setComments] = useState<any[]>([]);
@@ -167,7 +182,7 @@ export function PostDetailScreen({ postId, user, onBack, onLogout }: PostDetailS
 
                             <div className="flex items-center gap-2 text-gray-400">
                                 <MessageSquare className="w-5 h-5" />
-                                <span>{comments.length} Comments</span>
+                                <span>{countAllComments(comments)} Comments</span>
                             </div>
                         </div>
 

@@ -1,4 +1,4 @@
-import client from './client';
+import client, { getApiError } from './client';
 
 export const getAllPosts = async ({ page = 1, limit = 10, sort = 'new' } = {}) => {
   try {
