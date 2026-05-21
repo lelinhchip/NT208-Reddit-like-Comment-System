@@ -1,10 +1,11 @@
 ﻿import { useState } from 'react';
 import { LoginScreen } from './components/LoginScreen';
+import { RegistrationScreen } from './components/RegistrationScreen';
 import { PostListScreen } from './components/PostListScreen';
 import { PostDetailScreen } from './components/PostDetailScreen';
 import { isAuthenticated } from '../api/userApi'; // Import hàm check token
 
-type Screen = 'login' | 'postList' | 'postDetail';
+type Screen = 'login' | 'register' | 'postList' | 'postDetail';
 
 export default function App() {
     // Nếu đã có token thì vào thẳng PostList, chưa có thì Login
@@ -19,7 +20,16 @@ export default function App() {
     return (
         <div className="size-full">
             {currentScreen === 'login' && (
-                <LoginScreen onLogin={() => setCurrentScreen('postList')} />
+                <LoginScreen onLogin={() => setCurrentScreen('postList')}
+                onCreateAccountClick={() => setCurrentScreen('register')}
+                />
+            )}
+
+            {currentScreen === 'register' && (
+                <RegistrationScreen
+                    onSignUp={() => setCurrentScreen('postList')}
+                    onLoginClick={() => setCurrentScreen('login')}
+                />
             )}
 
             {currentScreen === 'postList' && (

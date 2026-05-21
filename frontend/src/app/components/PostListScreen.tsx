@@ -27,18 +27,41 @@ export function PostListScreen({ onPostClick }: PostListScreenProps) {
 
     return (
         <div className="min-h-screen bg-[#0a0a0a]">
-            {/* ... Giữ nguyên phần Header (Top Bar) như code trước ... */}
+            {/* Top Bar */}
+            <div className="bg-[#1a1a1a] border-b border-[#2a2a2a] px-4 py-3 sticky top-0 z-10">
+                <div className="max-w-4xl mx-auto flex items-center gap-4">
+                    {/* Search Input */}
+                    <div className="flex-1 relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                        <input
+                            type="text"
+                            placeholder="Search ThreadHub"
+                            className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-full pl-10 pr-4 py-2 text-white placeholder:text-gray-500 focus:border-[#4a4a4a] focus:outline-none transition-colors"
+                        />
+                    </div>
+
+                    {/* User Avatar */}
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center cursor-pointer">
+                        <span className="text-white font-medium">U</span>
+                    </div>
+                </div>
+            </div>
 
             {/* Post Feed */}
-            <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
+            <div className="max-w-4xl mx-auto px-4 py-6">
                 {loading ? (
-                    <div className="text-center text-gray-500 py-10">Đang tải bài viết...</div>
+                    <div className="text-center text-gray-500 py-10">Đang tải...</div>
                 ) : posts.length === 0 ? (
-                    <div className="text-center text-gray-500 py-10">Chưa có bài viết nào.</div>
+                    <div className="text-center text-gray-400 py-10">
+                        Chưa có bài viết nào.
+                        {/* Bạn có thể thêm nút "Tạo bài viết mới" ở đây để người dùng dễ thao tác */}
+                    </div>
                 ) : (
-                    posts.map((post) => (
-                        <PostCard key={post.id} post={post} onClick={() => onPostClick(post.id.toString())} />
-                    ))
+                    <div className="space-y-4">
+                        {posts.map((post) => (
+                            <PostCard key={post.id} post={post} onClick={() => onPostClick(post.id.toString())} />
+                        ))}
+                    </div>
                 )}
             </div>
         </div>

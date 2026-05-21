@@ -3,9 +3,10 @@ import { loginUser } from '../../api/userApi';
 
 interface LoginScreenProps {
     onLogin: () => void;
+    onCreateAccountClick: () => void;
 }
 
-export function LoginScreen({ onLogin }: LoginScreenProps) {
+export function LoginScreen({ onLogin, onCreateAccountClick }: LoginScreenProps) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -69,7 +70,12 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
                 <div className="flex justify-between text-sm">
                     <button className="text-gray-400 hover:text-white transition-colors">Forgot Password?</button>
-                    <button className="text-gray-400 hover:text-white transition-colors">Create an account</button>
+                    <button
+                        onClick={onCreateAccountClick}
+                        className="text-gray-400 hover:text-white transition-colors"
+                    >
+                        Create an account
+                    </button>
                 </div>
             </div>
         </div>
