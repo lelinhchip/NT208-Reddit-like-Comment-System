@@ -1,13 +1,30 @@
 const { pool } = require('../config/db');
 
 class Post {
-    /**
-     * Tạo bài đăng mới
-     * @param {number} userId - ID của người dùng
-     * @param {string} title - Tiêu đề bài đăng
-     * @param {string} content - Nội dung bài đăng
-     * @returns {Promise<Object>} - Bài đăng vừa tạo
-     */
+    static sanitizePagination(options = {}) {
+        const page = Math.max(parseInt(options.page, 10) || 1, 1);
+        const rawLimit = parseInt(options.limit, 10) || 10;
+        const limit = Math.min(Math.max(rawLimit, 1), 100);
+        const offset = (page - 1) * limit;
+        return { page, limit, offset };
+    }
+
+    static getPostSelectSql() {
+        return `p.*, u.username, u.avatar_url,
+                COALESCE((SELECT SUM(pv.vote_type) FROM post_votes pv WHERE pv.post_id = p.id), 0) AS vote_count,
+                (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count`;
+    }
+
+    static async recalculateCounts(postId) {
+        await pool.execute(
+            `UPDATE posts p
+             SET p.vote_count = COALESCE((SELECT SUM(pv.vote_type) FROM post_votes pv WHERE pv.post_id = p.id), 0),
+                 p.comment_count = (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id)
+             WHERE p.id = ?`,
+            [postId]
+        );
+    }
+
     static async create(userId, title, content) {
         try {
             const [result] = await pool.execute(
@@ -21,75 +38,44 @@ class Post {
         }
     }
 
-    /**
-     * Tìm bài đăng theo ID
-     * @param {number} id - ID bài đăng
-     * @returns {Promise<Object|null>} - Bài đăng hoặc null nếu không tìm thấy
-     */
     static async findById(id) {
         try {
+            await this.recalculateCounts(id);
+
             const [rows] = await pool.execute(
-                `SELECT p.*, u.username, u.avatar_url 
-                 FROM posts p 
-                 JOIN users u ON p.user_id = u.id 
+                `SELECT ${this.getPostSelectSql()}
+                 FROM posts p
+                 JOIN users u ON p.user_id = u.id
                  WHERE p.id = ?`,
                 [id]
             );
-            
-            if (rows.length === 0) return null;
-            
-            const post = rows[0];
-            
-            // Lấy số lượng comments thực tế
-            const [countResult] = await pool.execute(
-                'SELECT COUNT(*) as count FROM comments WHERE post_id = ?',
-                [id]
-            );
-            post.comment_count = countResult[0].count;
-            
-            return post;
+
+            return rows.length > 0 ? rows[0] : null;
         } catch (error) {
             console.error('Error in Post.findById:', error);
             throw error;
         }
     }
 
-    /**
-     * Lấy tất cả bài đăng (có phân trang và lọc)
-     * @param {Object} options - Tùy chọn phân trang và lọc
-     * @param {number} options.page - Số trang (mặc định: 1)
-     * @param {number} options.limit - Số bài đăng mỗi trang (mặc định: 10)
-     * @param {string} options.sort - Kiểu sắp xếp ('new' hoặc 'top')
-     * @returns {Promise<Object>} - Danh sách bài đăng và thông tin phân trang
-     */
     static async getAll(options = {}) {
         try {
-            const page = parseInt(options.page) || 1;
-            const limit = parseInt(options.limit) || 10;
-            const offset = (page - 1) * limit;
-            const sort = options.sort || 'new';
-            
-            // Xác định thứ tự sắp xếp dựa trên tham số sort
-            let orderBy = 'p.created_at DESC';
-            if (sort === 'top') {
-                orderBy = 'p.vote_count DESC, p.comment_count DESC';
-            }
-            
+            const { page, limit, offset } = this.sanitizePagination(options);
+            const sort = options.sort === 'top' ? 'top' : 'new';
+            const orderBy = sort === 'top'
+                ? 'vote_count DESC, comment_count DESC, p.created_at DESC'
+                : 'p.created_at DESC';
+
             const [rows] = await pool.query(
-                `SELECT p.*, u.username, u.avatar_url,
-                        (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as actual_comment_count
-                 FROM posts p 
-                 JOIN users u ON p.user_id = u.id 
+                `SELECT ${this.getPostSelectSql()}
+                 FROM posts p
+                 JOIN users u ON p.user_id = u.id
                  ORDER BY ${orderBy}
                  LIMIT ${limit} OFFSET ${offset}`
             );
-            
-            // Đếm tổng số bài đăng
-            const [countResult] = await pool.execute(
-                'SELECT COUNT(*) as total FROM posts'
-            );
+
+            const [countResult] = await pool.execute('SELECT COUNT(*) AS total FROM posts');
             const total = countResult[0].total;
-            
+
             return {
                 posts: rows,
                 pagination: {
@@ -105,28 +91,18 @@ class Post {
         }
     }
 
-    /**
-     * Cập nhật bài đăng
-     * @param {number} id - ID bài đăng
-     * @param {number} userId - ID người dùng (để kiểm tra quyền)
-     * @param {string} title - Tiêu đề mới
-     * @param {string} content - Nội dung mới
-     * @returns {Promise<Object|null>} - Bài đăng đã cập nhật hoặc null nếu không có quyền
-     */
     static async update(id, userId, title, content) {
         try {
-            // Kiểm tra bài đăng tồn tại và người dùng có quyền
             const post = await this.findById(id);
             if (!post) return null;
             if (post.user_id !== userId) return null;
-            
+
             const [result] = await pool.execute(
                 'UPDATE posts SET title = ?, content = ? WHERE id = ? AND user_id = ?',
                 [title, content, id, userId]
             );
-            
+
             if (result.affectedRows === 0) return null;
-            
             return await this.findById(id);
         } catch (error) {
             console.error('Error in Post.update:', error);
@@ -134,24 +110,17 @@ class Post {
         }
     }
 
-    /**
-     * Xóa bài đăng
-     * @param {number} id - ID bài đăng
-     * @param {number} userId - ID người dùng (để kiểm tra quyền)
-     * @returns {Promise<boolean>} - True nếu xóa thành công
-     */
     static async delete(id, userId) {
         try {
-            // Kiểm tra bài đăng tồn tại và người dùng có quyền
             const post = await this.findById(id);
             if (!post) return false;
             if (post.user_id !== userId) return false;
-            
+
             const [result] = await pool.execute(
                 'DELETE FROM posts WHERE id = ? AND user_id = ?',
                 [id, userId]
             );
-            
+
             return result.affectedRows > 0;
         } catch (error) {
             console.error('Error in Post.delete:', error);
@@ -159,96 +128,99 @@ class Post {
         }
     }
 
-    /**
-     * Cập nhật vote_count cho bài đăng
-     * @param {number} id - ID bài đăng
-     * @param {number} userId - ID người dùng vote
-     * @param {number} voteType - Loại vote (1: upvote, -1: downvote)
-     * @returns {Promise<Object>} - Thông tin vote mới
-     */
     static async updateVotes(id, userId, voteType) {
+        const connection = await pool.getConnection();
         try {
-            // Kiểm tra bài đăng tồn tại
-            const post = await this.findById(id);
-            if (!post) throw new Error('Post not found');
-            
-            // Kiểm tra đã vote trước đó chưa
-            const [existing] = await pool.execute(
-                'SELECT * FROM post_votes WHERE post_id = ? AND user_id = ?',
+            await connection.beginTransaction();
+
+            const [postRows] = await connection.execute('SELECT id FROM posts WHERE id = ?', [id]);
+            if (postRows.length === 0) throw new Error('Post not found');
+
+            const [existing] = await connection.execute(
+                'SELECT vote_type FROM post_votes WHERE post_id = ? AND user_id = ?',
                 [id, userId]
             );
-            
+
+            let userVote = voteType;
+            let hasVoted = true;
+
             if (existing.length > 0) {
-                const oldVoteType = existing[0].vote_type;
-                
+                const oldVoteType = Number(existing[0].vote_type);
+
                 if (oldVoteType === voteType) {
-                    // Bỏ vote (undo)
-                    await pool.execute(
+                    await connection.execute(
                         'DELETE FROM post_votes WHERE post_id = ? AND user_id = ?',
                         [id, userId]
                     );
+                    userVote = null;
+                    hasVoted = false;
                 } else {
-                    // Đổi vote (upvote -> downvote hoặc ngược lại)
-                    await pool.execute(
+                    await connection.execute(
                         'UPDATE post_votes SET vote_type = ? WHERE post_id = ? AND user_id = ?',
                         [voteType, id, userId]
                     );
                 }
             } else {
-                // Thêm vote mới
-                await pool.execute(
+                await connection.execute(
                     'INSERT INTO post_votes (post_id, user_id, vote_type) VALUES (?, ?, ?)',
                     [id, userId, voteType]
                 );
             }
-            
-            // Lấy vote_count đã được trigger cập nhật
-            const [result] = await pool.execute(
-                'SELECT vote_count FROM posts WHERE id = ?',
+
+            await connection.execute(
+                `UPDATE posts p
+                 SET p.vote_count = COALESCE((SELECT SUM(pv.vote_type) FROM post_votes pv WHERE pv.post_id = p.id), 0),
+                     p.comment_count = (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id)
+                 WHERE p.id = ?`,
                 [id]
             );
-            
+
+            const [result] = await connection.execute(
+                'SELECT vote_count, comment_count FROM posts WHERE id = ?',
+                [id]
+            );
+
+            await connection.commit();
+
             return {
                 postId: id,
                 voteCount: result[0].vote_count,
-                userVote: voteType,
-                hasVoted: true
+                vote_count: result[0].vote_count,
+                commentCount: result[0].comment_count,
+                comment_count: result[0].comment_count,
+                userVote,
+                user_vote: userVote,
+                hasVoted
             };
         } catch (error) {
+            await connection.rollback();
             console.error('Error in Post.updateVotes:', error);
             throw error;
+        } finally {
+            connection.release();
         }
     }
 
-    /**
-     * Lấy bài đăng theo user
-     * @param {number} userId - ID người dùng
-     * @param {Object} options - Tùy chọn phân trang
-     * @returns {Promise<Object>} - Danh sách bài đăng của user
-     */
     static async findByUser(userId, options = {}) {
         try {
-            const page = parseInt(options.page) || 1;
-            const limit = parseInt(options.limit) || 10;
-            const offset = (page - 1) * limit;
-            
-            const [rows] = await pool.execute(
-                `SELECT p.*, u.username, u.avatar_url,
-                        (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as actual_comment_count
-                 FROM posts p 
-                 JOIN users u ON p.user_id = u.id 
+            const { page, limit, offset } = this.sanitizePagination(options);
+
+            const [rows] = await pool.query(
+                `SELECT ${this.getPostSelectSql()}
+                 FROM posts p
+                 JOIN users u ON p.user_id = u.id
                  WHERE p.user_id = ?
                  ORDER BY p.created_at DESC
-                 LIMIT ? OFFSET ?`,
-                [userId, limit, offset]
+                 LIMIT ${limit} OFFSET ${offset}`,
+                [userId]
             );
-            
+
             const [countResult] = await pool.execute(
-                'SELECT COUNT(*) as total FROM posts WHERE user_id = ?',
+                'SELECT COUNT(*) AS total FROM posts WHERE user_id = ?',
                 [userId]
             );
             const total = countResult[0].total;
-            
+
             return {
                 posts: rows,
                 pagination: {
@@ -264,36 +236,42 @@ class Post {
         }
     }
 
-    /**
-     * Tìm kiếm bài đăng theo từ khóa
-     * @param {string} keyword - Từ khóa tìm kiếm
-     * @param {Object} options - Tùy chọn phân trang
-     * @returns {Promise<Object>} - Danh sách bài đăng phù hợp
-     */
     static async search(keyword, options = {}) {
         try {
-            const page = parseInt(options.page) || 1;
-            const limit = parseInt(options.limit) || 10;
-            const offset = (page - 1) * limit;
-            const searchTerm = `%${keyword}%`;
-            
-            const [rows] = await pool.execute(
-                `SELECT p.*, u.username, u.avatar_url,
-                        (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as actual_comment_count
-                 FROM posts p 
-                 JOIN users u ON p.user_id = u.id 
+            const cleanKeyword = String(keyword || '').trim();
+            const { page, limit, offset } = this.sanitizePagination(options);
+
+            if (!cleanKeyword) {
+                return {
+                    posts: [],
+                    pagination: {
+                        page,
+                        limit,
+                        total: 0,
+                        totalPages: 0,
+                        keyword: cleanKeyword
+                    }
+                };
+            }
+
+            const searchTerm = `%${cleanKeyword}%`;
+
+            const [rows] = await pool.query(
+                `SELECT ${this.getPostSelectSql()}
+                 FROM posts p
+                 JOIN users u ON p.user_id = u.id
                  WHERE p.title LIKE ? OR p.content LIKE ?
                  ORDER BY p.created_at DESC
-                 LIMIT ? OFFSET ?`,
-                [searchTerm, searchTerm, limit, offset]
+                 LIMIT ${limit} OFFSET ${offset}`,
+                [searchTerm, searchTerm]
             );
-            
+
             const [countResult] = await pool.execute(
-                'SELECT COUNT(*) as total FROM posts WHERE title LIKE ? OR content LIKE ?',
+                'SELECT COUNT(*) AS total FROM posts WHERE title LIKE ? OR content LIKE ?',
                 [searchTerm, searchTerm]
             );
             const total = countResult[0].total;
-            
+
             return {
                 posts: rows,
                 pagination: {
@@ -301,7 +279,7 @@ class Post {
                     limit,
                     total,
                     totalPages: Math.ceil(total / limit),
-                    keyword
+                    keyword: cleanKeyword
                 }
             };
         } catch (error) {
@@ -310,23 +288,18 @@ class Post {
         }
     }
 
-    /**
-     * Lấy bài đăng nổi bật (có nhiều vote nhất)
-     * @param {number} limit - Số lượng bài đăng (mặc định: 5)
-     * @returns {Promise<Array>} - Danh sách bài đăng nổi bật
-     */
     static async getTopPosts(limit = 5) {
         try {
-            const [rows] = await pool.execute(
-                `SELECT p.*, u.username, u.avatar_url,
-                        (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as actual_comment_count
-                 FROM posts p 
-                 JOIN users u ON p.user_id = u.id 
-                 ORDER BY p.vote_count DESC, p.comment_count DESC
-                 LIMIT ?`,
-                [limit]
+            const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 5, 1), 20);
+
+            const [rows] = await pool.query(
+                `SELECT ${this.getPostSelectSql()}
+                 FROM posts p
+                 JOIN users u ON p.user_id = u.id
+                 ORDER BY vote_count DESC, comment_count DESC, p.created_at DESC
+                 LIMIT ${safeLimit}`
             );
-            
+
             return rows;
         } catch (error) {
             console.error('Error in Post.getTopPosts:', error);
@@ -334,19 +307,13 @@ class Post {
         }
     }
 
-    /**
-     * Kiểm tra người dùng đã vote bài đăng chưa
-     * @param {number} postId - ID bài đăng
-     * @param {number} userId - ID người dùng
-     * @returns {Promise<number|null>} - Loại vote hoặc null nếu chưa vote
-     */
     static async getUserVote(postId, userId) {
         try {
             const [rows] = await pool.execute(
                 'SELECT vote_type FROM post_votes WHERE post_id = ? AND user_id = ?',
                 [postId, userId]
             );
-            
+
             return rows.length > 0 ? rows[0].vote_type : null;
         } catch (error) {
             console.error('Error in Post.getUserVote:', error);
