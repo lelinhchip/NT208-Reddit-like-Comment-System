@@ -23,8 +23,12 @@ export default defineConfig({
         tailwindcss(),
     ],
     server: {
-        host: '0.0.0.0', // Lắng nghe trên tất cả các địa chỉ mạng
-        port: 5173,      // Đảm bảo khớp với cổng trong Dockerfile và docker-compose.yml
+        host: '0.0.0.0', 
+        port: 5173,     
+        strictPort: true, 
+        watch: {
+            usePolling: true,
+        }
     },
     resolve: {
         alias: {
