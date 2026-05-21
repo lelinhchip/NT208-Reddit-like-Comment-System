@@ -1,4 +1,4 @@
-import client from './client';
+import client, { getApiError } from './client';
 
 // 1. Lấy tất cả bình luận của một post
 export const getCommentsByPostId = async (postId) => {
