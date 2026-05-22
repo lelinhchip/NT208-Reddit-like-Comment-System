@@ -135,32 +135,28 @@ exports.voteComment = async (req, res) => {
         if (!user_id) {
             return res.status(401).json({ message: "Vui lòng đăng nhập" });
         }
-        // Kiểm tra bình luận có tồn tại không
+
+        // 1. Kiểm tra bình luận có tồn tại không
         const comment = await Comment.findById(id);
         if (!comment) {
             return res.status(404).json({ message: "Bình luận không tồn tại" });
         }
 
-        // Kiểm tra user đã vote bình luận này chưa
-        const existingVote = await CommentVote.findByUserAndComment(user_id, id);
+        // 2. Sử dụng hàm updateVotes có sẵn trong model Comment.js 
+        const result = await Comment.updateVotes(id, user_id, vote_type);
 
-        if (existingVote) {
-            if (existingVote.vote_type === Number(vote_type)) {
-                // Nếu bấm lại vote cũ -> Hủy vote (Delete)
-                await CommentVote.delete(existingVote.id);
-                res.status(200).json({ message: "Đã hủy vote", action: "removed" });
-            } else {
-                // Nếu đổi từ upvote sang downvote hoặc ngược lại -> Update
-                await CommentVote.update(existingVote.id, Number(vote_type));
-                res.status(200).json({ message: "Đã thay đổi vote", action: "updated" });
+        // 3. Trả về đúng format để Frontend (PostDetailScreen.tsx) cập nhật state
+        res.status(200).json({
+            message: "Vote thành công",
+            comment: {
+                id: Number(id),
+                vote_count: result.vote_count,
+                user_vote: result.user_vote
             }
-        } else {
-            // Chưa vote -> Tạo mới (Insert)
-            await CommentVote.create({ user_id, comment_id: id, vote_type: Number(vote_type) });
-            res.status(201).json({ message: "Vote thành công", action: "created" });
-        }
+        });
 
     } catch (error) {
+        console.error("Lỗi khi vote comment:", error);
         res.status(500).json({ message: "Lỗi khi vote", error: error.message });
     }
 };

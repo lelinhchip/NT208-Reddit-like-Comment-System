@@ -1,18 +1,37 @@
-import { ArrowLeft, ArrowUp, ArrowDown, MessageSquare, Send, LogOut, Trash2 } from 'lucide-react';
+import { ArrowLeft, ArrowUp, ArrowDown, MessageSquare, Send, LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { getPostById, votePost, deletePost } from '../../api/postApi';
-import { createComment, deleteComment, getCommentsByPostId, voteComment } from '../../api/commentApi';
+import { getPostById, votePost } from '../../api/postApi';
+import { getCommentsByPostId, createComment, voteComment } from '../../api/commentApi';
 import { isAuthenticated } from '../../api/userApi';
 
 interface PostDetailScreenProps {
     postId: string;
     user?: any;
     onBack: () => void;
-    onLogout: () => void;
+    onLogout?: () => void;
+}
+
+function unwrapResponse(response: any) {
+    return response?.data ?? response;
+}
+
+function unwrapPost(response: any) {
+    const payload = unwrapResponse(response);
+    return payload?.post ?? payload?.data ?? payload;
+}
+
+function unwrapComments(response: any): any[] {
+    const payload = unwrapResponse(response);
+    const comments = payload?.comments ?? payload?.data ?? payload;
+    return Array.isArray(comments) ? comments : [];
 }
 
 function getScore(item: any) {
-    return item?.score ?? item?.vote_count ?? item?.votes ?? 0;
+    return Number(item?.vote_count ?? item?.score ?? item?.votes ?? 0);
+}
+
+function getUserVote(item: any) {
+    return Number(item?.user_vote ?? item?.userVote ?? 0);
 }
 
 function formatDate(value: string) {
@@ -22,31 +41,32 @@ function formatDate(value: string) {
     return date.toLocaleString();
 }
 
-// Đếm tất cả comments (main + replies)
 function countAllComments(comments: any[]): number {
     let total = 0;
+
     const traverse = (nodes: any[]) => {
-        nodes.forEach(comment => {
+        nodes.forEach((comment) => {
             total += 1;
-            if (comment.replies && comment.replies.length > 0) {
+            if (Array.isArray(comment.replies) && comment.replies.length > 0) {
                 traverse(comment.replies);
             }
         });
     };
+
     traverse(comments);
     return total;
 }
 
-export function PostDetailScreen({ postId, user, onBack, onLogout }: PostDetailScreenProps) {
+export function PostDetailScreen({ postId, onBack, onLogout }: PostDetailScreenProps) {
     const [post, setPost] = useState<any>(null);
     const [comments, setComments] = useState<any[]>([]);
     const [commentText, setCommentText] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [votingPost, setVotingPost] = useState(false);
 
     const loadData = async () => {
-        setLoading(true);
         setError('');
 
         try {
@@ -55,9 +75,10 @@ export function PostDetailScreen({ postId, user, onBack, onLogout }: PostDetailS
                 getCommentsByPostId(postId),
             ]);
 
-            setPost(postRes?.data || postRes);
-            setComments(Array.isArray(commentsRes) ? commentsRes : commentsRes?.data || []);
+            setPost(unwrapPost(postRes));
+            setComments(unwrapComments(commentsRes));
         } catch (err: any) {
+            console.error('Lỗi lấy chi tiết bài viết:', err);
             setError(err?.message || 'Không tải được chi tiết bài viết');
         } finally {
             setLoading(false);
@@ -65,17 +86,20 @@ export function PostDetailScreen({ postId, user, onBack, onLogout }: PostDetailS
     };
 
     useEffect(() => {
-        loadData();
+        setLoading(true);
+        void loadData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [postId]);
 
+    const requireLogin = (message: string) => {
+        if (isAuthenticated()) return true;
+        alert(message);
+        return false;
+    };
+
     const handleSendComment = async () => {
         if (!commentText.trim()) return;
-
-        if (!isAuthenticated()) {
-            alert('Vui lòng đăng nhập để bình luận');
-            return;
-        }
+        if (!requireLogin('Vui lòng đăng nhập để bình luận')) return;
 
         setIsSubmitting(true);
 
@@ -85,9 +109,11 @@ export function PostDetailScreen({ postId, user, onBack, onLogout }: PostDetailS
                 content: commentText.trim(),
                 parent_comment_id: null,
             });
+
             setCommentText('');
             await loadData();
         } catch (err: any) {
+            console.error('Lỗi gửi bình luận:', err);
             alert(err?.message || 'Gửi bình luận thất bại');
         } finally {
             setIsSubmitting(false);
@@ -95,27 +121,19 @@ export function PostDetailScreen({ postId, user, onBack, onLogout }: PostDetailS
     };
 
     const handleVotePost = async (voteType: 1 | -1) => {
-        if (!isAuthenticated()) {
-            alert('Vui lòng đăng nhập để vote');
-            return;
-        }
+        if (!requireLogin('Vui lòng đăng nhập để vote')) return;
+        if (votingPost) return;
+
+        setVotingPost(true);
 
         try {
             await votePost(postId, voteType);
             await loadData();
         } catch (err: any) {
-            alert(err?.message || 'Vote thất bại');
-        }
-    };
-
-    const handleDeletePost = async () => {
-        if (!window.confirm('Bạn có chắc muốn xóa bài viết này?')) return;
-
-        try {
-            await deletePost(postId);
-            onBack();
-        } catch (err: any) {
-            alert(err?.message || 'Xóa bài viết thất bại');
+            console.error('Lỗi vote post:', err);
+            alert(err?.message || 'Vote bài viết thất bại');
+        } finally {
+            setVotingPost(false);
         }
     };
 
@@ -127,7 +145,9 @@ export function PostDetailScreen({ postId, user, onBack, onLogout }: PostDetailS
         return (
             <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center justify-center gap-4 px-4">
                 <div className="text-red-400 text-center">{error}</div>
-                <button onClick={onBack} className="px-4 py-2 rounded-full bg-[#1a1a1a] hover:bg-[#2a2a2a] transition-colors">Quay lại</button>
+                <button onClick={onBack} className="px-4 py-2 rounded-full bg-[#1a1a1a] hover:bg-[#2a2a2a] transition-colors">
+                    Quay lại
+                </button>
             </div>
         );
     }
@@ -136,7 +156,8 @@ export function PostDetailScreen({ postId, user, onBack, onLogout }: PostDetailS
         return <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">Bài viết không tồn tại</div>;
     }
 
-    const canDeletePost = user?.id && post?.user_id && Number(user.id) === Number(post.user_id);
+    const postUserVote = getUserVote(post);
+    const totalComments = Number(post?.comment_count ?? post?.commentCount ?? countAllComments(comments));
 
     return (
         <div className="min-h-screen bg-[#0a0a0a]">
@@ -146,9 +167,11 @@ export function PostDetailScreen({ postId, user, onBack, onLogout }: PostDetailS
                         <ArrowLeft className="w-6 h-6" />
                     </button>
                     <span className="text-white font-medium flex-1">Post Detail</span>
-                    <button onClick={onLogout} className="text-gray-400 hover:text-[#FF4500] transition-colors" title="Logout">
-                        <LogOut className="w-5 h-5" />
-                    </button>
+                    {onLogout && (
+                        <button onClick={onLogout} className="text-gray-400 hover:text-[#FF4500] transition-colors" title="Logout">
+                            <LogOut className="w-5 h-5" />
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -168,29 +191,31 @@ export function PostDetailScreen({ postId, user, onBack, onLogout }: PostDetailS
                     <h1 className="text-white mb-4 text-2xl font-bold">{post.title}</h1>
                     <p className="text-gray-300 mb-4 leading-relaxed whitespace-pre-wrap">{post.content}</p>
 
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2 bg-[#0a0a0a] rounded-full px-3 py-2">
-                                <button onClick={() => handleVotePost(1)} className={`hover:text-orange-500 transition-colors ${post.user_vote === 1 ? 'text-orange-500' : 'text-gray-400'}`}>
-                                    <ArrowUp className="w-5 h-5" />
-                                </button>
-                                <span className="text-white font-medium min-w-[2rem] text-center">{getScore(post)}</span>
-                                <button onClick={() => handleVotePost(-1)} className={`hover:text-blue-500 transition-colors ${post.user_vote === -1 ? 'text-blue-500' : 'text-gray-400'}`}>
-                                    <ArrowDown className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            <div className="flex items-center gap-2 text-gray-400">
-                                <MessageSquare className="w-5 h-5" />
-                                <span>{countAllComments(comments)} Comments</span>
-                            </div>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 bg-[#0a0a0a] rounded-full px-3 py-2">
+                            <button
+                                type="button"
+                                onClick={() => handleVotePost(1)}
+                                disabled={votingPost}
+                                className={`hover:text-orange-500 transition-colors disabled:opacity-50 ${postUserVote === 1 ? 'text-orange-500' : 'text-gray-400'}`}
+                            >
+                                <ArrowUp className="w-5 h-5" />
+                            </button>
+                            <span className="text-white font-medium min-w-[2rem] text-center">{getScore(post)}</span>
+                            <button
+                                type="button"
+                                onClick={() => handleVotePost(-1)}
+                                disabled={votingPost}
+                                className={`hover:text-blue-500 transition-colors disabled:opacity-50 ${postUserVote === -1 ? 'text-blue-500' : 'text-gray-400'}`}
+                            >
+                                <ArrowDown className="w-5 h-5" />
+                            </button>
                         </div>
 
-                        {canDeletePost && (
-                            <button onClick={handleDeletePost} className="text-gray-400 hover:text-red-400 transition-colors" title="Delete post">
-                                <Trash2 className="w-5 h-5" />
-                            </button>
-                        )}
+                        <div className="flex items-center gap-2 text-gray-400">
+                            <MessageSquare className="w-5 h-5" />
+                            <span>{totalComments} Comments</span>
+                        </div>
                     </div>
                 </div>
 
@@ -199,12 +224,17 @@ export function PostDetailScreen({ postId, user, onBack, onLogout }: PostDetailS
                         <input
                             type="text"
                             value={commentText}
-                            onChange={(e) => setCommentText(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSendComment()}
+                            onChange={(event) => setCommentText(event.target.value)}
+                            onKeyDown={(event) => event.key === 'Enter' && handleSendComment()}
                             placeholder="Thêm bình luận..."
                             className="flex-1 bg-transparent text-white placeholder:text-gray-500 focus:outline-none"
                         />
-                        <button onClick={handleSendComment} disabled={isSubmitting || !commentText.trim()} className="text-gray-400 hover:text-white transition-colors disabled:opacity-50">
+                        <button
+                            type="button"
+                            onClick={handleSendComment}
+                            disabled={isSubmitting || !commentText.trim()}
+                            className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                        >
                             <Send className="w-5 h-5" />
                         </button>
                     </div>
@@ -220,7 +250,6 @@ export function PostDetailScreen({ postId, user, onBack, onLogout }: PostDetailS
                                 comment={comment}
                                 depth={0}
                                 postId={postId}
-                                currentUser={user}
                                 onReload={loadData}
                             />
                         ))
@@ -235,35 +264,36 @@ function DarkComment({
     comment,
     depth,
     postId,
-    currentUser,
     onReload,
 }: {
     comment: any;
     depth: number;
     postId: string;
-    currentUser?: any;
-    onReload: () => void;
+    onReload: () => Promise<void> | void;
 }) {
     const [showReplyInput, setShowReplyInput] = useState(false);
     const [replyText, setReplyText] = useState('');
-    const [submitting, setSubmitting] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isVoting, setIsVoting] = useState(false);
 
     const maxDepth = 8;
     const shouldIndent = depth < maxDepth;
     const username = comment.username || 'Anonymous';
     const avatarColors = ['bg-blue-600', 'bg-green-600', 'bg-purple-600', 'bg-pink-600', 'bg-yellow-600'];
     const avatarColor = avatarColors[username.length % avatarColors.length];
-    const canDeleteComment = currentUser?.id && comment?.user_id && Number(currentUser.id) === Number(comment.user_id);
+    const userVote = getUserVote(comment);
+
+    const requireLogin = (message: string) => {
+        if (isAuthenticated()) return true;
+        alert(message);
+        return false;
+    };
 
     const handleReply = async () => {
         if (!replyText.trim()) return;
+        if (!requireLogin('Vui lòng đăng nhập để trả lời')) return;
 
-        if (!isAuthenticated()) {
-            alert('Vui lòng đăng nhập để trả lời');
-            return;
-        }
-
-        setSubmitting(true);
+        setIsSubmitting(true);
 
         try {
             await createComment({
@@ -271,38 +301,32 @@ function DarkComment({
                 content: replyText.trim(),
                 parent_comment_id: comment.id,
             });
+
             setReplyText('');
             setShowReplyInput(false);
             await onReload();
         } catch (err: any) {
+            console.error('Lỗi trả lời bình luận:', err);
             alert(err?.message || 'Trả lời thất bại');
         } finally {
-            setSubmitting(false);
+            setIsSubmitting(false);
         }
     };
 
     const handleVoteComment = async (voteType: 1 | -1) => {
-        if (!isAuthenticated()) {
-            alert('Vui lòng đăng nhập để vote');
-            return;
-        }
+        if (!requireLogin('Vui lòng đăng nhập để vote bình luận')) return;
+        if (isVoting) return;
+
+        setIsVoting(true);
 
         try {
             await voteComment(comment.id, voteType);
             await onReload();
         } catch (err: any) {
+            console.error('Lỗi vote bình luận:', err);
             alert(err?.message || 'Vote bình luận thất bại');
-        }
-    };
-
-    const handleDeleteComment = async () => {
-        if (!window.confirm('Bạn có chắc muốn xóa bình luận này?')) return;
-
-        try {
-            await deleteComment(comment.id);
-            await onReload();
-        } catch (err: any) {
-            alert(err?.message || 'Xóa bình luận thất bại');
+        } finally {
+            setIsVoting(false);
         }
     };
 
@@ -327,42 +351,60 @@ function DarkComment({
 
                         <div className="flex items-center gap-3 text-sm">
                             <div className="flex items-center gap-1">
-                                <button onClick={() => handleVoteComment(1)} className="hover:bg-[#1a1a1a] hover:text-orange-500 p-1 rounded transition-colors text-gray-400">
+                                <button
+                                    type="button"
+                                    onClick={() => handleVoteComment(1)}
+                                    disabled={isVoting}
+                                    className={`hover:bg-[#1a1a1a] hover:text-orange-500 p-1 rounded transition-colors disabled:opacity-50 ${userVote === 1 ? 'text-orange-500' : 'text-gray-400'}`}
+                                >
                                     <ArrowUp className="w-4 h-4" />
                                 </button>
                                 <span className="font-medium min-w-[1.5rem] text-center text-white">{getScore(comment)}</span>
-                                <button onClick={() => handleVoteComment(-1)} className="hover:bg-[#1a1a1a] hover:text-blue-500 p-1 rounded transition-colors text-gray-400">
+                                <button
+                                    type="button"
+                                    onClick={() => handleVoteComment(-1)}
+                                    disabled={isVoting}
+                                    className={`hover:bg-[#1a1a1a] hover:text-blue-500 p-1 rounded transition-colors disabled:opacity-50 ${userVote === -1 ? 'text-blue-500' : 'text-gray-400'}`}
+                                >
                                     <ArrowDown className="w-4 h-4" />
                                 </button>
                             </div>
 
-                            <button onClick={() => setShowReplyInput(!showReplyInput)} className="flex items-center gap-1 hover:bg-[#1a1a1a] px-2 py-1 rounded transition-colors text-gray-400 hover:text-white">
+                            <button
+                                type="button"
+                                onClick={() => setShowReplyInput(!showReplyInput)}
+                                className="flex items-center gap-1 hover:bg-[#1a1a1a] px-2 py-1 rounded transition-colors text-gray-400 hover:text-white"
+                            >
                                 <MessageSquare className="w-4 h-4" />
                                 <span className="font-medium">Reply</span>
                             </button>
-
-                            {canDeleteComment && (
-                                <button onClick={handleDeleteComment} className="flex items-center gap-1 hover:bg-[#1a1a1a] px-2 py-1 rounded transition-colors text-gray-400 hover:text-red-400">
-                                    <Trash2 className="w-4 h-4" />
-                                    <span className="font-medium">Delete</span>
-                                </button>
-                            )}
                         </div>
 
                         {showReplyInput && (
                             <div className="mt-3 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg p-3">
-                                <textarea
+                                <input
+                                    type="text"
                                     value={replyText}
-                                    onChange={(e) => setReplyText(e.target.value)}
-                                    placeholder="Write a reply..."
-                                    className="w-full min-h-[70px] resize-none border-none outline-none bg-transparent text-white placeholder:text-gray-500"
+                                    onChange={(event) => setReplyText(event.target.value)}
+                                    onKeyDown={(event) => event.key === 'Enter' && handleReply()}
+                                    placeholder={`Trả lời u/${username}...`}
+                                    className="w-full bg-transparent text-white placeholder:text-gray-500 focus:outline-none mb-2"
                                 />
-                                <div className="flex gap-2 justify-end mt-2">
-                                    <button onClick={() => setShowReplyInput(false)} className="px-4 py-1.5 rounded-full text-gray-400 hover:bg-[#1a1a1a] transition-colors">
-                                        Cancel
+                                <div className="flex gap-2 justify-end">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowReplyInput(false)}
+                                        className="px-4 py-1.5 rounded-full text-gray-400 hover:bg-[#1a1a1a] transition-colors"
+                                    >
+                                        Hủy
                                     </button>
-                                    <button onClick={handleReply} disabled={submitting || !replyText.trim()} className="bg-[#FF4500] text-white px-4 py-1.5 rounded-full hover:bg-[#ff5722] disabled:opacity-50 transition-colors">
-                                        Reply
+                                    <button
+                                        type="button"
+                                        onClick={handleReply}
+                                        disabled={isSubmitting || !replyText.trim()}
+                                        className="bg-[#FF4500] text-white px-4 py-1.5 rounded-full hover:bg-[#ff5722] transition-colors disabled:opacity-50"
+                                    >
+                                        Gửi
                                     </button>
                                 </div>
                             </div>
@@ -370,15 +412,14 @@ function DarkComment({
                     </div>
                 </div>
 
-                {comment.replies && comment.replies.length > 0 && (
-                    <div>
+                {Array.isArray(comment.replies) && comment.replies.length > 0 && (
+                    <div className="mt-2">
                         {comment.replies.map((reply: any) => (
                             <DarkComment
                                 key={reply.id}
                                 comment={reply}
                                 depth={depth + 1}
                                 postId={postId}
-                                currentUser={currentUser}
                                 onReload={onReload}
                             />
                         ))}
