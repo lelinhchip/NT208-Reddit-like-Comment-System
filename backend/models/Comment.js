@@ -81,7 +81,7 @@ class Comment {
         }
     }
 
-    static async getByPostId(postId, userId = null) {
+    static async getByPostId(postId, userId = null, sort = 'new') {
         try {
             await ensureCommentVotesTable();
 
@@ -90,6 +90,10 @@ class Comment {
                 ? ', (SELECT cv2.vote_type FROM comment_votes cv2 WHERE cv2.comment_id = c.id AND cv2.user_id = ? LIMIT 1) AS user_vote'
                 : ', NULL AS user_vote';
 
+            const orderByClause = sort === 'top' 
+                ? 'ORDER BY calculated_vote_count DESC, c.created_at DESC' 
+                : 'ORDER BY c.created_at ASC';
+
             const [rows] = await pool.execute(
                 `SELECT c.*, u.username, u.avatar_url,
                 COALESCE((SELECT SUM(cv.vote_type) FROM comment_votes cv WHERE cv.comment_id = c.id), 0) AS calculated_vote_count
@@ -97,7 +101,7 @@ class Comment {
          FROM comments c
          LEFT JOIN users u ON c.user_id = u.id
          WHERE c.post_id = ?
-         ORDER BY c.created_at ASC`,
+         ${orderByClause}`,
                 params
             );
 

@@ -31,4 +31,22 @@ const authenticateToken = (req, res, next) => {
     }
 };
 
-module.exports = { authenticateToken, generateToken };
+const optionalAuth = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return next();
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_secret_key');
+        req.user = { id: decoded.userId || decoded.id };
+        next();
+    } catch (error) {
+        // Ignored invalid token for optional auth
+        next();
+    }
+};
+
+module.exports = { authenticateToken, optionalAuth, generateToken };

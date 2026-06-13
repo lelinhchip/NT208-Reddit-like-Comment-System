@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const commentController = require('../controllers/commentController');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, optionalAuth } = require('../middleware/auth');
 
 // Public routes
-router.get('/post/:postId', commentController.getCommentsByPost);
+router.get('/post/:postId', optionalAuth, commentController.getCommentsByPost);
 router.get('/:id', commentController.getCommentById);
 router.get('/post/:postId/search', commentController.searchInComments);
 router.get('/post/:postId/comment/:id/count', commentController.countTotalReplies);

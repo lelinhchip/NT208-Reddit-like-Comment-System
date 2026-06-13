@@ -1,8 +1,8 @@
 import client from './client';
 
-export const getCommentsByPostId = async (postId) => {
+export const getCommentsByPostId = async (postId, sort = 'new') => {
     try {
-        const response = await client.get(`/comments/post/${postId}`);
+        const response = await client.get(`/comments/post/${postId}`, { params: { sort } });
         return response.data;
     } catch (error) {
         throw error.response?.data || { message: 'Lỗi lấy danh sách bình luận' };

@@ -67,6 +67,7 @@ export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost }:
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [votingPost, setVotingPost] = useState(false);
+    const [commentSort, setCommentSort] = useState<'new' | 'top'>('new');
 
     const loadData = async () => {
         setError('');
@@ -74,7 +75,7 @@ export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost }:
         try {
             const [postRes, commentsRes] = await Promise.all([
                 getPostById(postId),
-                getCommentsByPostId(postId),
+                getCommentsByPostId(postId, commentSort),
             ]);
 
             setPost(unwrapPost(postRes));
@@ -91,7 +92,7 @@ export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost }:
         setLoading(true);
         void loadData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [postId]);
+    }, [postId, commentSort]);
 
     const requireLogin = (message: string) => {
         if (isAuthenticated()) return true;
@@ -254,6 +255,18 @@ export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost }:
                             <Send className="w-5 h-5" />
                         </button>
                     </div>
+                </div>
+
+                <div className="flex justify-between items-center mb-4 border-b border-[#2a2a2a] pb-2">
+                    <span className="text-white font-medium">Bình luận ({totalComments})</span>
+                    <select
+                        value={commentSort}
+                        onChange={(e) => setCommentSort(e.target.value as 'new' | 'top')}
+                        className="bg-[#1a1a1a] text-white border border-[#2a2a2a] rounded px-3 py-1.5 focus:outline-none focus:border-gray-500 transition-colors"
+                    >
+                        <option value="new">Mới nhất</option>
+                        <option value="top">Top (Nhiều Vote)</option>
+                    </select>
                 </div>
 
                 <div className="space-y-0">

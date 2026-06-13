@@ -38,7 +38,10 @@ exports.createComment = async (req, res) => {
 exports.getCommentsByPost = async (req, res) => {
     try {
         const { postId } = req.params;
-        const flatComments = await Comment.getByPostId(postId);
+        const sort = req.query.sort || 'new';
+        const user_id = req.user?.id || null;
+        
+        const flatComments = await Comment.getByPostId(postId, user_id, sort);
 
         const commentTree = buildCommentTree(flatComments);
 
