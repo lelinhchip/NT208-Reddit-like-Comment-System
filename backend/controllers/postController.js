@@ -9,8 +9,9 @@ const postController = {
      */
     async createPost(req, res) {
         try {
-            const { title, content } = req.body;
+            const { community, title, content } = req.body;
             const userId = req.user?.id; // Lấy từ middleware authenticateToken
+            const postCommunity = community || 'r/general';
 
             // Validate input
             if (!title || title.trim() === '') {
@@ -48,7 +49,7 @@ const postController = {
                 });
             }
 
-            const newPost = await Post.create(userId, title, content);
+            const newPost = await Post.create(userId, postCommunity, title, content);
             
             res.status(201).json({
                 success: true,
@@ -184,8 +185,9 @@ const postController = {
     async updatePost(req, res) {
         try {
             const postId = parseInt(req.params.id);
-            const { title, content } = req.body;
+            const { community, title, content } = req.body;
             const userId = req.user?.id;
+            const postCommunity = community || 'r/general';
 
             if (isNaN(postId)) {
                 return res.status(400).json({
@@ -240,7 +242,7 @@ const postController = {
                 });
             }
 
-            const updatedPost = await Post.update(postId, userId, title, content);
+            const updatedPost = await Post.update(postId, userId, postCommunity, title, content);
             
             if (!updatedPost) {
                 return res.status(400).json({

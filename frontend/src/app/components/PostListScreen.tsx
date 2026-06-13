@@ -187,6 +187,7 @@ export function PostListScreen({ user, onLogout, onPostClick, onCreatePostClick 
 
 function PostCard({ post, onClick, onVote }: { post: any; onClick: () => void; onVote: (e: React.MouseEvent, postId: string | number, voteType: 1 | -1) => void }) {
     const userVote = post?.user_vote;
+    const isEdited = new Date(post.updated_at).getTime() > new Date(post.created_at).getTime() + 2000;
 
     return (
         <div onClick={onClick} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 hover:border-[#3a3a3a] transition-colors cursor-pointer">
@@ -194,11 +195,14 @@ function PostCard({ post, onClick, onVote }: { post: any; onClick: () => void; o
                 <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center">
                     <span className="text-white text-xs">r/</span>
                 </div>
-                <span className="text-sm font-medium text-white">r/general</span>
+                <span className="text-sm font-medium text-white">{post.community || 'r/general'}</span>
                 <span className="text-gray-600">•</span>
                 <span className="text-sm text-gray-400">u/{post.username || 'Anonymous'}</span>
                 <span className="text-gray-600">•</span>
-                <span className="text-sm text-gray-400">{formatDate(post.created_at)}</span>
+                <span className="text-sm text-gray-400">
+                    {formatDate(post.created_at)}
+                    {isEdited && <span className="ml-1 italic">(edited)</span>}
+                </span>
             </div>
 
             <h3 className="text-white mb-2 text-lg font-semibold">{post.title}</h3>

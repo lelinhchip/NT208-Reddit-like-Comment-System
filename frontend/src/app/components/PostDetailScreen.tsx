@@ -1,4 +1,5 @@
-import { ArrowLeft, ArrowUp, ArrowDown, MessageSquare, Send, LogOut } from 'lucide-react';
+import { ArrowLeft, ArrowUp, ArrowDown, MessageSquare, Send, LogOut, Edit } from 'lucide-react';
+import Markdown from 'react-markdown';
 import { useEffect, useState } from 'react';
 import { getPostById, votePost } from '../../api/postApi';
 import { getCommentsByPostId, createComment, voteComment } from '../../api/commentApi';
@@ -9,6 +10,7 @@ interface PostDetailScreenProps {
     user?: any;
     onBack: () => void;
     onLogout?: () => void;
+    onEditPost?: () => void;
 }
 
 function unwrapResponse(response: any) {
@@ -57,7 +59,7 @@ function countAllComments(comments: any[]): number {
     return total;
 }
 
-export function PostDetailScreen({ postId, onBack, onLogout }: PostDetailScreenProps) {
+export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost }: PostDetailScreenProps) {
     const [post, setPost] = useState<any>(null);
     const [comments, setComments] = useState<any[]>([]);
     const [commentText, setCommentText] = useState('');
@@ -158,6 +160,8 @@ export function PostDetailScreen({ postId, onBack, onLogout }: PostDetailScreenP
 
     const postUserVote = getUserVote(post);
     const totalComments = Number(post?.comment_count ?? post?.commentCount ?? countAllComments(comments));
+    const isAuthor = user && (user.id === post.user_id || user.username === post.username);
+    const isEdited = new Date(post.updated_at).getTime() > new Date(post.created_at).getTime() + 2000; // 2 seconds threshold
 
     return (
         <div className="min-h-screen bg-[#0a0a0a]">
@@ -179,17 +183,22 @@ export function PostDetailScreen({ postId, onBack, onLogout }: PostDetailScreenP
                 <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-6 mb-6">
                     <div className="flex items-center gap-2 mb-4">
                         <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                            <span className="text-white text-sm">r/</span>
+                            <span className="text-white text-sm font-bold">r/</span>
                         </div>
-                        <span className="text-sm font-medium text-white">r/general</span>
+                        <span className="text-white font-medium">{post.community || 'r/general'}</span>
                         <span className="text-gray-600">•</span>
                         <span className="text-sm text-gray-400">u/{post.username || 'Anonymous'}</span>
                         <span className="text-gray-600">•</span>
-                        <span className="text-sm text-gray-400">{formatDate(post.created_at)}</span>
+                        <span className="text-sm text-gray-400">
+                            {formatDate(post.created_at)}
+                            {isEdited && <span className="ml-1 italic">(edited)</span>}
+                        </span>
                     </div>
 
                     <h1 className="text-white mb-4 text-2xl font-bold">{post.title}</h1>
-                    <p className="text-gray-300 mb-4 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+                    <div className="text-gray-300 mb-4 leading-relaxed overflow-hidden prose prose-invert max-w-none prose-p:my-2 prose-a:text-blue-400 hover:prose-a:underline prose-img:rounded-lg prose-img:max-w-full prose-img:max-h-[500px] prose-img:object-contain prose-pre:bg-[#0a0a0a] prose-pre:border prose-pre:border-[#2a2a2a]">
+                        <Markdown>{post.content}</Markdown>
+                    </div>
 
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2 bg-[#0a0a0a] rounded-full px-3 py-2">
@@ -216,6 +225,13 @@ export function PostDetailScreen({ postId, onBack, onLogout }: PostDetailScreenP
                             <MessageSquare className="w-5 h-5" />
                             <span>{totalComments} Comments</span>
                         </div>
+
+                        {isAuthor && onEditPost && (
+                            <button onClick={onEditPost} className="flex items-center gap-2 text-gray-400 hover:text-white hover:bg-[#0a0a0a] px-3 py-1.5 rounded-full transition-colors ml-auto">
+                                <Edit className="w-5 h-5" />
+                                <span className="font-medium">Edit</span>
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -347,7 +363,9 @@ function DarkComment({
                             <span className="text-sm text-gray-400">{formatDate(comment.created_at)}</span>
                         </div>
 
-                        <p className="text-gray-300 mb-2 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
+                        <div className="text-gray-300 mb-2 leading-relaxed overflow-hidden prose prose-invert max-w-none prose-sm prose-p:my-1 prose-a:text-blue-400 hover:prose-a:underline prose-img:rounded-md prose-img:max-h-64 prose-img:object-contain prose-pre:bg-[#0a0a0a] prose-pre:border prose-pre:border-[#2a2a2a]">
+                            <Markdown>{comment.content}</Markdown>
+                        </div>
 
                         <div className="flex items-center gap-3 text-sm">
                             <div className="flex items-center gap-1">

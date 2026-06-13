@@ -52,18 +52,18 @@ export const getPostById = async (id) => {
     }
 };
 
-export const createPost = async ({ title, content }) => {
+export const createPost = async ({ community, title, content }) => {
     try {
-        const response = await client.post('/posts', { title, content });
+        const response = await client.post('/posts', { community, title, content });
         return response.data;
     } catch (error) {
         throw getApiError(error, 'Lỗi tạo bài đăng');
     }
 };
 
-export const updatePost = async (id, { title, content }) => {
+export const updatePost = async (id, { community, title, content }) => {
     try {
-        const response = await client.put(`/posts/${id}`, { title, content });
+        const response = await client.put(`/posts/${id}`, { community, title, content });
         return response.data;
     } catch (error) {
         throw getApiError(error, 'Lỗi cập nhật bài đăng');
@@ -85,5 +85,20 @@ export const votePost = async (id, voteType) => {
         return response.data;
     } catch (error) {
         throw getApiError(error, 'Lỗi vote bài đăng');
+    }
+};
+
+export const uploadImage = async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+        const response = await client.post('/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response.data;
+    } catch (error) {
+        throw getApiError(error, 'Lỗi tải ảnh lên');
     }
 };

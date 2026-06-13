@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { LoginScreen } from './components/LoginScreen';
 import { RegistrationScreen } from './components/RegistrationScreen';
 import { PostListScreen } from './components/PostListScreen';
@@ -6,7 +6,7 @@ import { PostDetailScreen } from './components/PostDetailScreen';
 import { CreatePostScreen } from './components/CreatePostScreen';
 import { getCurrentUser, isAuthenticated, logoutUser } from '../api/userApi';
 
-type Screen = 'login' | 'register' | 'postList' | 'postDetail' | 'createPost';
+type Screen = 'login' | 'register' | 'postList' | 'postDetail' | 'createPost' | 'editPost';
 
 export default function App() {
     const [currentScreen, setCurrentScreen] = useState<Screen>(isAuthenticated() ? 'postList' : 'login');
@@ -55,8 +55,9 @@ export default function App() {
                 />
             )}
 
-            {currentScreen === 'createPost' && (
+            {(currentScreen === 'createPost' || currentScreen === 'editPost') && (
                 <CreatePostScreen
+                    editPostId={currentScreen === 'editPost' ? selectedPostId : null}
                     onPost={(postId?: string | number) => {
                         if (postId) {
                             goToPost(postId);
@@ -64,7 +65,13 @@ export default function App() {
                             setCurrentScreen('postList');
                         }
                     }}
-                    onCancel={() => setCurrentScreen('postList')}
+                    onCancel={() => {
+                        if (currentScreen === 'editPost' && selectedPostId) {
+                            setCurrentScreen('postDetail');
+                        } else {
+                            setCurrentScreen('postList');
+                        }
+                    }}
                 />
             )}
 
@@ -74,6 +81,7 @@ export default function App() {
                     user={currentUser}
                     onBack={() => setCurrentScreen('postList')}
                     onLogout={handleLogout}
+                    onEditPost={() => setCurrentScreen('editPost')}
                 />
             )}
         </div>

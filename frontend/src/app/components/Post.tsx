@@ -1,4 +1,5 @@
 import { ArrowUp, ArrowDown, MessageSquare, Share2 } from 'lucide-react';
+import Markdown from 'react-markdown';
 
 interface PostProps {
     community?: string;
@@ -26,8 +27,8 @@ export function Post({
     return (
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 mb-4">
             <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">r/</span>
+                <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center">
+                    <span className="text-white text-xs">r/</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                     <span className="font-semibold text-white">{community}</span>
@@ -39,7 +40,9 @@ export function Post({
             </div>
 
             <h1 className="mb-3 text-white text-xl font-bold">{title}</h1>
-            <p className="text-gray-300 mb-4 leading-relaxed whitespace-pre-wrap">{body}</p>
+            <div className="text-gray-300 mb-4 leading-relaxed overflow-hidden prose prose-invert max-w-none prose-p:my-1 prose-a:text-blue-400 hover:prose-a:underline prose-img:rounded-md prose-img:max-h-96 prose-img:object-contain prose-pre:bg-[#0a0a0a] prose-pre:border prose-pre:border-[#2a2a2a]">
+                <Markdown>{body}</Markdown>
+            </div>
 
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 bg-[#0a0a0a] rounded-full px-3 py-1.5">

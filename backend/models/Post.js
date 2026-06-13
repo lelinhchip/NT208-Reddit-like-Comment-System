@@ -25,11 +25,11 @@ class Post {
         );
     }
 
-    static async create(userId, title, content) {
+    static async create(userId, community, title, content) {
         try {
             const [result] = await pool.execute(
-                'INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)',
-                [userId, title, content]
+                'INSERT INTO posts (user_id, community, title, content) VALUES (?, ?, ?, ?)',
+                [userId, community, title, content]
             );
             return await this.findById(result.insertId);
         } catch (error) {
@@ -91,15 +91,15 @@ class Post {
         }
     }
 
-    static async update(id, userId, title, content) {
+    static async update(id, userId, community, title, content) {
         try {
             const post = await this.findById(id);
             if (!post) return null;
             if (post.user_id !== userId) return null;
 
             const [result] = await pool.execute(
-                'UPDATE posts SET title = ?, content = ? WHERE id = ? AND user_id = ?',
-                [title, content, id, userId]
+                'UPDATE posts SET community = ?, title = ?, content = ? WHERE id = ? AND user_id = ?',
+                [community, title, content, id, userId]
             );
 
             if (result.affectedRows === 0) return null;

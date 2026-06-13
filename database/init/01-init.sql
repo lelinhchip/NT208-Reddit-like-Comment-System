@@ -1,4 +1,4 @@
-﻿SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
 SET character_set_client = utf8mb4;
 SET character_set_connection = utf8mb4;
 SET character_set_results = utf8mb4;
@@ -18,10 +18,11 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS posts (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
+    community VARCHAR(50) DEFAULT 'r/general',
     title VARCHAR(300) NOT NULL,
-    content TEXT,
+    content TEXT NOT NULL,
     vote_count INT DEFAULT 0,
     comment_count INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
