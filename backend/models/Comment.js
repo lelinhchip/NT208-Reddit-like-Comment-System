@@ -112,7 +112,8 @@ class Comment {
                 return row;
             });
         } catch (error) {
-            throw new Error(`Lỗi lấy comment theo post: ${error.message}`);
+            console.error('DATABASE ERROR IN getByPostId:', error);
+            throw new Error(`Lỗi lấy comment theo post: ${error.message || error}`);
         }
     }
 
