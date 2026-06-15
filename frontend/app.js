@@ -1,4 +1,4 @@
-const API = 'http://localhost:5000/api';
+const API = 'https://nt208-reddit-like-comment-system-1.onrender.com/api';
 const USER_ID = 99; 
 
 async function loadPosts(sort = 'new') {
