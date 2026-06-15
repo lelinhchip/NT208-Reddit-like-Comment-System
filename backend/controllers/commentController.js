@@ -1,19 +1,25 @@
 const Comment = require('../models/Comment');
+const { buildCommentTree, traverseCommentsDFS } = require('../utils/treeUtils');
 
 exports.createComment = async (req, res) => {
     try {
-        const { post_id, user_id, content, parent_comment_id } = req.body;
+        const { post_id, content, parent_comment_id } = req.body;
+        const user_id = req.user?.id; // Lấy từ token (auth middleware)
 
-        // 1. Validation
+        // Validation
         if (!content || content.trim() === "") {
             return res.status(400).json({ message: "Nội dung không được để trống" });
         }
 
-        if (!post_id || !user_id) {
-            return res.status(400).json({ message: "post_id và user_id là bắt buộc" });
+        if (!post_id) {
+            return res.status(400).json({ message: "post_id là bắt buộc" });
         }
 
-        // 2. Tạo comment trong database
+        if (!user_id) {
+            return res.status(401).json({ message: "Vui lòng đăng nhập" });
+        }
+
+        // Tạo comment trong database
         const newComment = await Comment.create({
             post_id,
             user_id,
@@ -28,12 +34,18 @@ exports.createComment = async (req, res) => {
     }
 };
 
-// Lấy tất cả bình luận của một bài viết
+// Lấy tất cả bình luận và chuyển đổi thành cấu trúc Cây (Tree Structure)
 exports.getCommentsByPost = async (req, res) => {
     try {
         const { postId } = req.params;
-        const comments = await Comment.getByPostId(postId);
-        res.status(200).json(comments);
+        const sort = req.query.sort || 'new';
+        const user_id = req.user?.id || null;
+        
+        const flatComments = await Comment.getByPostId(postId, user_id, sort);
+
+        const commentTree = buildCommentTree(flatComments);
+
+        res.status(200).json(commentTree);
     } catch (error) {
         res.status(500).json({ message: "Lỗi khi lấy bình luận", error: error.message });
     }
@@ -53,25 +65,24 @@ exports.getCommentById = async (req, res) => {
     }
 };
 
-// Lấy các reply của một bình luận
-exports.getReplies = async (req, res) => {
-    try {
-        const { commentId } = req.params;
-        const replies = await Comment.getReplies(commentId);
-        res.status(200).json(replies);
-    } catch (error) {
-        res.status(500).json({ message: "Lỗi khi lấy reply", error: error.message });
-    }
-};
-
 // Cập nhật bình luận
 exports.updateComment = async (req, res) => {
     try {
         const { id } = req.params;
         const { content } = req.body;
+        const user_id = req.user?.id;
 
         if (!content || content.trim() === "") {
             return res.status(400).json({ message: "Nội dung không được để trống" });
+        }
+
+        const existingComment = await Comment.findById(id);
+        if (!existingComment) {
+            return res.status(404).json({ message: "Bình luận không tồn tại" });
+        }
+
+        if (existingComment.user_id !== user_id) {
+            return res.status(403).json({ message: "Bạn không có quyền chỉnh sửa bình luận này" });
         }
 
         const updated = await Comment.update(id, { content: content.trim() });
@@ -86,10 +97,23 @@ exports.updateComment = async (req, res) => {
     }
 };
 
+
 // Xóa bình luận
 exports.deleteComment = async (req, res) => {
     try {
         const { id } = req.params;
+        const user_id = req.user?.id;
+
+        const existingComment = await Comment.findById(id);
+        if (!existingComment) {
+            return res.status(404).json({ message: "Bình luận không tồn tại" });
+        }
+
+        // Kiểm tra quyền sở hữu
+        if (existingComment.user_id !== user_id) {
+            return res.status(403).json({ message: "Bạn không có quyền xóa bình luận này" });
+        }
+
         const deleted = await Comment.delete(id);
         if (!deleted) {
             return res.status(404).json({ message: "Bình luận không tồn tại" });
@@ -100,11 +124,130 @@ exports.deleteComment = async (req, res) => {
     }
 };
 
-// Vote cho bình luận (Upvote/Downvote) - TODO
+// Vote cho bình luận (Upvote/Downvote)
 exports.voteComment = async (req, res) => {
     try {
-        res.status(501).json({ message: "Chức năng vote chưa được implement" });
+        const { id } = req.params;
+        const { vote_type } = req.body;
+        const user_id = req.user?.id;
+
+        if (![1, -1].includes(Number(vote_type))) {
+            return res.status(400).json({ message: "vote_type phải là 1 (upvote) hoặc -1 (downvote)" });
+        }
+
+        if (!user_id) {
+            return res.status(401).json({ message: "Vui lòng đăng nhập" });
+        }
+
+        // 1. Kiểm tra bình luận có tồn tại không
+        const comment = await Comment.findById(id);
+        if (!comment) {
+            return res.status(404).json({ message: "Bình luận không tồn tại" });
+        }
+
+        // 2. Sử dụng hàm updateVotes có sẵn trong model Comment.js 
+        const result = await Comment.updateVotes(id, user_id, vote_type);
+
+        // 3. Trả về đúng format để Frontend (PostDetailScreen.tsx) cập nhật state
+        res.status(200).json({
+            message: "Vote thành công",
+            comment: {
+                id: Number(id),
+                vote_count: result.vote_count,
+                user_vote: result.user_vote
+            }
+        });
+
     } catch (error) {
+        console.error("Lỗi khi vote comment:", error);
         res.status(500).json({ message: "Lỗi khi vote", error: error.message });
+    }
+};
+
+// Áp dụng DFS
+// Tìm kiếm từ khóa trong cây bình luận
+exports.searchInComments = async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const { keyword } = req.query;
+
+        if (!keyword) {
+            return res.status(400).json({ message: "Vui lòng cung cấp từ khóa tìm kiếm" });
+        }
+
+        const flatComments = await Comment.getByPostId(postId);
+        // Dựng cây
+        const commentTree = buildCommentTree(flatComments);
+        const matchedComments = [];
+
+        // Duyệt cây bằng DFS
+        traverseCommentsDFS(commentTree, (comment) => {
+            if (comment.content.toLowerCase().includes(keyword.toLowerCase())) {
+                const { replies, ...cleanComment } = comment;
+                matchedComments.push(cleanComment);
+            }
+        });
+
+        res.status(200).json(matchedComments);
+    } catch (error) {
+        res.status(500).json({ message: "Lỗi tìm kiếm bình luận", error: error.message });
+    }
+};
+
+// Tính tổng số lượng phản hồi của 1 bình luận cụ thể (ưd: hiển thị nút "Xem tất cả 15 phản hồi" dưới một bình luận gốc)
+exports.countTotalReplies = async (req, res) => {
+    try {
+        const { id, postId } = req.params; // id của bình luận gốc cần đếm
+
+        // Dựng cây
+        const flatComments = await Comment.getByPostId(postId);
+        const commentTree = buildCommentTree(flatComments);
+
+        // Tìm kiếm node mục tiêu
+        let targetNode = null;
+        traverseCommentsDFS(commentTree, (node) => {
+            if (node.id === Number(id)) targetNode = node;
+        });
+
+        if (!targetNode) return res.status(404).json({ message: "Không tìm thấy bình luận" });
+
+        let totalCount = 0;
+
+        // ỨNG DỤNG DFS ĐỂ ĐẾM (Bỏ qua chính nó, chỉ đếm con cháu)
+        traverseCommentsDFS([targetNode], (comment) => {
+            if (comment.id !== Number(id)) {
+                totalCount++;
+            }
+        });
+
+        res.status(200).json({ comment_id: id, total_replies: totalCount });
+    } catch (error) {
+        res.status(500).json({ message: "Lỗi đếm số phản hồi", error: error.message });
+    }
+};
+
+// Lấy danh sách ID người dùng tham gia vào một nhánh bình luận (Để gửi thông báo)
+exports.getThreadParticipants = async (req, res) => {
+    try {
+        const { id, postId } = req.params;
+
+        const flatComments = await Comment.getByPostId(postId);
+        const commentTree = buildCommentTree(flatComments);
+
+        let targetNode = null;
+        traverseCommentsDFS(commentTree, (node) => {
+            if (node.id === Number(id)) targetNode = node;
+        });
+
+        if (!targetNode) return res.status(404).json({ message: "Không tìm thấy bình luận" });
+
+        const participants = new Set();
+        traverseCommentsDFS([targetNode], (comment) => {
+            if (comment.user_id) participants.add(comment.user_id);
+        });
+
+        res.status(200).json({ thread_id: id, participant_ids: Array.from(participants) });
+    } catch (error) {
+        res.status(500).json({ message: "Lỗi lấy người tham gia", error: error.message });
     }
 };

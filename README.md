@@ -1,235 +1,238 @@
-# NT208 - Reddit-like Comment System
+<div align="center">
 
-## Thành viên nhóm:
-- Lê Hồ Khánh Linh 
-- Bùi Nguyễn Minh Anh
-- Lê Lâm Bảo Tư
-- Thân Thị Khánh Linh
+# ThreadHub
 
-## Công nghệ sử dụng:
-- **Frontend**: ReactJS + Vite
-- **Backend**: Node.js + Express
-- **Database**: MySQL
-- **Container**: Docker
 
-## Cấu trúc dự án:
 
-```
-NT208-Reddit-like-Comment-System/
-├── backend/
-│   ├── config/
-│   │   └── db.js                # TODO: Setup MySQL connection
-│   ├── controllers/
-│   │   ├── userController.js    # TODO: User logic
-│   │   ├── postController.js    # TODO: Post logic
-│   │   └── commentController.js # TODO: Comment logic
-│   ├── models/
-│   │   ├── User.js              # TODO: User model
-│   │   ├── Post.js              # TODO: Post model
-│   │   └── Comment.js           # TODO: Comment model
-│   ├── routes/
-│   │   ├── userRoutes.js        # TODO: User routes
-│   │   ├── postRoutes.js        # TODO: Post routes
-│   │   └── commentRoutes.js     # TODO: Comment routes
-│   ├── index.js                 # TODO: Setup routes
-│   ├── package.json             # Dependencies (ready)
-│   ├── .env                     # Config (ready)
-│   └── Dockerfile               # Docker config (ready)
-├── frontend/
-│   ├── src/
-│   │   ├── api/
-│   │   │   ├── client.js        # Axios config (ready)
-│   │   │   ├── postApi.js       # TODO: Post API functions
-│   │   │   ├── commentApi.js    # TODO: Comment API functions
-│   │   │   └── userApi.js       # TODO: User API functions
-│   │   ├── components/
-│   │   │   ├── PostForm.jsx     # TODO: Create post form
-│   │   │   ├── PostItem.jsx     # TODO: Post item display
-│   │   │   ├── PostList.jsx     # TODO: List posts
-│   │   │   ├── CommentForm.jsx  # TODO: Create comment form
-│   │   │   ├── CommentItem.jsx  # TODO: Comment item display
-│   │   │   └── CommentList.jsx  # TODO: List comments
-│   │   ├── pages/
-│   │   │   ├── HomePage.jsx     # TODO: Home page
-│   │   │   └── PostDetailPage.jsx # TODO: Post detail page
-│   │   ├── App.jsx              # TODO: Setup routes
-│   │   └── main.jsx             # Entry point (ready)
-│   ├── package.json             # Dependencies (ready)
-│   ├── .env                     # Config (ready)
-│   └── Dockerfile               # Docker config (ready)
-├── database/
-│   └── reddit_db.sql                 # Schema (ready)
-├── docker-compose.yml           # Docker compose (ready)
-├── .gitignore                   # Git config (ready)
-├── .env.example                 # Config template (ready)
-└── API_DOCUMENTATION.md         # API docs reference
-```
+<p>
+  <a href="https://reactjs.org/"><img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" /></a>
+  <a href="https://vitejs.dev/"><img src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" alt="Vite" /></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" /></a>
+  <a href="https://expressjs.com/"><img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" /></a>
+  <a href="https://www.mysql.com/"><img src="https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL" /></a>
+  <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" /></a>
+</p>
 
-## Hướng dẫn phát triển:
+<em>A modern, full-stack discussion platform featuring nested comments, real-time interactions, and containerized deployment</em>
 
-### File sườn (TODO)
-Các file code có chứa `// TODO:` là chỗ nhóm cần điền code. Mỗi file có ghi chú về những gì cần implement.
+<br />
 
-### Thứ tự phát triển khuyến nghị:
-1. **Backend - Config & Models** (models/User.js, models/Post.js, models/Comment.js, config/db.js)
-2. **Backend - Controllers** (controllers/userController.js, etc.)
-3. **Backend - Routes** (routes/userRoutes.js, etc.)
-4. **Backend - Main** (index.js - import routes)
-5. **Frontend - API** (src/api/postApi.js, etc.)
-6. **Frontend - Components** (Các component files)
-7. **Frontend - Pages** (HomePage.jsx, PostDetailPage.jsx)
-8. **Frontend - App** (App.jsx - setup router)
+<p>
+  <b><a href="#-key-features">Key Features</a></b> • 
+  <b><a href="#-tech-stack">Tech Stack</a></b> • 
+  <b><a href="#-installation--usage">Installation</a></b> • 
+  <b><a href="#-team-members">Team</a></b>
+</p>
 
-## Hướng dẫn chạy dự án:
+</div>
 
-### 1. Clone Repository
+## Project Overview
+
+This project is a Reddit-like comment and discussion system developed to handle hierarchical data structures, user authentication, and interactive UI components. Built with a robust React frontend and a Node.js/MySQL backend, the application is fully containerized using Docker for seamless deployment and scalability. Developed by students at the University of Information Technology (UIT).
+
+## Academic Context
+
+- **Course:** NT208
+**Objective:** Apply practical full-stack development, database management (relational mapping for nested items), and DevOps practices (Docker).
+- **Scope:** Educational project demonstrating modern web architecture.
+
+## Key Features
+
+<div align="center">
+  <table>
+    <tr>
+      <td width="25%" align="center">
+        <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Memo.png" width="40px" height="40px"/>
+        <br/>
+        <b>Post Management</b>
+        <br/>
+        <sub>Create, read, update, and delete posts with a rich user interface.</sub>
+      </td>
+      <td width="25%" align="center">
+        <span style="font-size:40px;">💬</span>
+        <br/>
+        <b>Nested Comments</b>
+        <br/>
+        <sub>Recursive multi-level comment threads to keep discussions organized.</sub>
+      </td>
+      <td width="25%" align="center">
+        <span style="font-size:40px;">⬆️</span>
+        <br/>
+        <b>Voting System</b>
+        <br/>
+        <sub>Interactive Upvote/Downvote functionality for both posts and comments.</sub>
+      </td>
+      <td width="25%" align="center">
+        <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Locked.png" width="40px" height="40px"/>
+        <br/>
+        <b>Secure Auth</b>
+        <br/>
+        <sub>Complete user registration, login, and profile management system.</sub>
+      </td>
+    </tr>
+    <tr>
+      <td width="25%" align="center">
+        <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Camera.png" width="40px" height="40px"/>
+        <br/>
+        <b>Rich Media</b>
+        <br/>
+        <sub>Markdown formatting and local image uploads for engaging posts.</sub>
+      </td>
+      <td width="25%" align="center">
+        <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/File%20Folder.png" width="40px" height="40px"/>
+        <br/>
+        <b>Communities</b>
+        <br/>
+        <sub>Organize posts into dedicated channels (e.g., r/programming).</sub>
+      </td>
+      <td width="25%" align="center">
+        <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Floppy%20Disk.png" width="40px" height="40px"/>
+        <br/>
+        <b>Auto-save Drafts</b>
+        <br/>
+        <sub>Never lose your work with automatic draft saving while writing.</sub>
+      </td>
+      <td width="25%" align="center">
+        <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Pencil.png" width="40px" height="40px"/>
+        <br/>
+        <b>Post Editing</b>
+        <br/>
+        <sub>Edit posts after publishing, complete with an '(edited)' badge.</sub>
+      </td>
+    </tr>
+  </table>
+</div>
+
+## Tech Stack
+
+<div align="center">
+
+### Frontend
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+
+### Backend & Database
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Express](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white)
+
+### DevOps & Tools
+![Docker](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white)
+
+</div>
+
+## Team Members
+<div align="center">
+
+| Name | Role | MSSV |
+| :--- | :--- |:--- |
+| **Lê Hồ Khánh Linh** | Developer | 24520958 | 
+| **Bùi Nguyễn Minh Anh** | Developer | 24520086 | 
+| **Lê Lâm Bảo Tư** | Developer | 24521909 |
+| **Thân Thị Khánh Linh** | Developer | 24520969 | 
+
+</div>
+
+## Installation & Usage
+### Method 1: Using Docker (Recommended)
+The fastest way to get the project running with zero configuration.
 ```bash
-git clone https://github.com/lelinhchip/NT208-Reddit-like-Comment-System
+# 1. Clone the repository
+git clone [https://github.com/lelinhchip/NT208-Reddit-like-Comment-System.git](https://github.com/lelinhchip/NT208-Reddit-like-Comment-System.git)
 cd NT208-Reddit-like-Comment-System
-```
 
-### 2. Sử dụng Docker (Recommended)
-
-**Yêu cầu**: Docker và Docker Compose đã cài đặt
-
-```bash
-# Build và chạy tất cả services
+# 2. Build and start all services
 docker-compose up --build
 
-# Khi chạy lần tiếp theo (không cần build lại)
-docker-compose up
-
-# Dừng services
-docker-compose down
+# 3. Access the application
+# Frontend: http://localhost:5173
+# Backend:  http://localhost:5000
+# Database: localhost:3307
 ```
 
-**URLs**:
-- Frontend: http://localhost:3000
-- Backend: http://localhost:5000
-- Database: localhost:3306
+First, clone the repository to your local machine:
+```bash
+git clone <your-repository-url>
+cd threadhub
+```
 
-### 3. Chạy Locally (Không dùng Docker)
+Choose one of the following methods to run the application:
 
-#### Backend Setup:
+### Method 1: Using Docker (Recommended)
+To simplify the deployment process, the entire ThreadHub environment (Database, Node.js Backend, and React/Vite Frontend) is containerized. 
+
+**Prerequisites:**
+* [Docker](https://docs.docker.com/get-docker/)
+* [Docker Compose](https://docs.docker.com/compose/install/)
+
+**Steps:**
+1. Start the entire stack with a single command:
+   ```bash
+   docker-compose up -d --build
+   ```
+   *(Note: The database initialization scripts in `database/init/` will run automatically during the first startup.)*
+
+2. Access the application:
+   * **Frontend (Web App):** http://localhost:5173
+   * **Backend (API Server):** http://localhost:5000 (or the port specified in your `.env`)
+
+**Useful Docker Commands:**
+* Stop and remove containers: `docker-compose down`
+* View application logs: `docker-compose logs -f`
+
+
+---
+
+### Method 2: Manual Local Setup
+
+**1. Database Setup:**
+
+```bash
+# 1. Initialize schema
+mysql -u root -p < database/init/01-init.sql
+
+# 2. Insert sample comments
+mysql -u root -p < database/init/02-insert_test_comments.sql
+
+# 3. Insert sample posts
+mysql -u root -p < database/init/03-insert_test_post.sql
+
+# 4. Apply mojibake (encoding) fix
+mysql -u root -p < database/init/04-fix_mojibake.sql
+```
+
+**2. Backend Setup:**
 ```bash
 cd backend
-
-# Cài đặt dependencies
 npm install
-
-# Tạo .env file
-cp .env.example .env
-# Chỉnh sửa .env với cấu hình MySQL của bạn
-
-# Chạy server
+cp .env.example .env  # Update this file with your MySQL credentials
 npm start
 ```
 
-#### Frontend Setup:
+**3. Frontend Setup:**
 ```bash
 cd frontend
-
-# Cài đặt dependencies
 npm install
-
-# Tạo .env file
-cp .env.example .env
-
-# Chạy development server
 npm run dev
-
-# Build production
-npm run build
 ```
-
-#### Database Setup:
-```bash
-# Tạo database và tables
-mysql -u root -p < database/init.sql
-```
-
-## Tính năng chính:
-
-✅ **Posts**
-- Tạo bài viết mới
-- Xem danh sách bài viết
-- Xem chi tiết bài viết
-- Chỉnh sửa bài viết (của chính mình)
-- Xóa bài viết (của chính mình)
-- Upvote/Downvote bài viết
-
-✅ **Comments**
-- Bình luận trên bài viết
-- Trả lời bình luận (nested comments)
-- Chỉnh sửa bình luận (của chính mình)
-- Xóa bình luận (của chính mình)
-- Upvote/Downvote bình luận
-
-✅ **Users**
-- Đăng ký người dùng
-- Đăng nhập
-- Xem hồ sơ người dùng
 
 ## API Documentation
 
-Xem file [API_DOCUMENTATION.md](API_DOCUMENTATION.md) để có chi tiết các API endpoints.
+Detailed endpoint specifications and payload structures can be found in the [API_DOCUMENTATION.md](API_DOCUMENTATION.md) file.
 
-## Environment Variables
+## Future Enhancements
+- Implementation of WebSocket for real-time comment updates.
+- Advanced search and filtering by tags/categories.
+- Cloud storage integration for images (currently local upload).
+- Email verification and password reset workflows.
+<div align="center">
+  <br>
+</div>
 
-### Backend (.env)
-```
-PORT=5000
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=reddit_db
-NODE_ENV=development
-```
+---
 
-### Frontend (.env)
-```
-VITE_API_URL=http://localhost:5000
-```
-
-## Phát triển thêm:
-
-**Tính năng có thể bổ sung:**
-- Authentication/Authorization (JWT)
-- User profile pages
-- Search functionality
-- Categories/Tags
-- Notifications
-- User follows/followers
-- Post edit history
-- Comment reactions (emojis)
-- Real-time updates (WebSocket)
-- Image upload
-- Email notifications
-
-## Troubleshooting:
-
-**Database connection error:**
-- Kiểm tra MySQL service đang chạy
-- Kiểm tra .env file có đúng credentials
-
-**Port already in use:**
-```bash
-# Kill process on port
-Windows: netstat -ano | findstr :3000
-         taskkill /PID <PID> /F
-
-macOS/Linux: lsof -i :3000
-             kill -9 <PID>
-```
-
-**Docker issues:**
-```bash
-# Remove all containers and images
-docker-compose down -v
-docker system prune -a
-
-# Rebuild
-docker-compose up --build
-```
-
-
+<div align="center">
+  <p style="font-size: 10px; color: gray">© 2026 
+  Project</p>
+</div>

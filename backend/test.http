@@ -1,0 +1,127 @@
+### ========== USER APIs ==========
+
+### 1. Register - Đăng ký user mới
+POST http://localhost:5000/api/users/register
+Content-Type: application/json
+
+{
+  "username": "john_doe",
+  "email": "john@example.com",
+  "password": "password123"
+}
+
+### 2. Login - Đăng nhập
+POST http://localhost:5000/api/users/login
+Content-Type: application/json
+
+{
+  "username": "john_doe",
+  "password": "password123"
+}
+
+### 3. Get User By ID (cần token - thay YOUR_TOKEN)
+GET http://localhost:5000/api/users/1
+Authorization: Bearer YOUR_TOKEN
+
+### 4. Get All Users (cần token)
+GET http://localhost:5000/api/users
+Authorization: Bearer YOUR_TOKEN
+
+---
+
+### ========== POST APIs ==========
+
+### 5. Get All Posts
+GET http://localhost:5000/api/posts
+
+### 6. Get Post By ID
+GET http://localhost:5000/api/posts/1
+
+### 7. Create Post (cần token)
+POST http://localhost:5000/api/posts
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN
+
+{
+  "title": "Bài viết mẫu đầu tiên",
+  "content": "Đây là nội dung của bài viết mẫu"
+}
+
+### 8. Update Post (cần token)
+PUT http://localhost:5000/api/posts/1
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN
+
+{
+  "title": "Tiêu đề cập nhật",
+  "content": "Nội dung cập nhật"
+}
+
+### 9. Delete Post (cần token)
+DELETE http://localhost:5000/api/posts/1
+Authorization: Bearer YOUR_TOKEN
+
+### 10. Vote Post (cần token)
+POST http://localhost:5000/api/posts/1/vote
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN
+
+{
+  "vote_type": 1
+}
+
+---
+
+### ========== COMMENT APIs ==========
+
+### 11. Get Comments By Post ID
+GET http://localhost:5000/api/comments/post/1
+
+### 12. Get Comment By ID
+GET http://localhost:5000/api/comments/1
+
+### 13. Get Comment Replies
+GET http://localhost:5000/api/comments/1/replies
+
+### 14. Create Comment (cần token)
+POST http://localhost:5000/api/comments
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN
+
+{
+  "post_id": 1,
+  "content": "Đây là bình luận mẫu"
+}
+
+### 15. Create Comment Reply (cần token)
+POST http://localhost:5000/api/comments
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN
+
+{
+  "post_id": 1,
+  "content": "Đây là reply",
+  "parent_comment_id": 1
+}
+
+### 16. Update Comment (cần token)
+PUT http://localhost:5000/api/comments/1
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN
+
+{
+  "content": "Nội dung bình luận cập nhật"
+}
+
+### 17. Delete Comment (cần token)
+DELETE http://localhost:5000/api/comments/1
+Authorization: Bearer YOUR_TOKEN
+
+### 18. Vote Comment (cần token)
+POST http://localhost:5000/api/comments/1/vote
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN
+
+{
+  "vote_type": 1
+}

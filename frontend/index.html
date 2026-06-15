@@ -1,33 +1,23 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Reddit Clone</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reddit-like Post Interface</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #root {
+            height: 100%;
+        }
+    </style>
 </head>
+
 <body>
-
-  <div class="container">
-    <h1>Reddit Clone</h1>
-
-    <!-- Form tạo post -->
-    <div class="create-post">
-      <h2>Tạo Post mới</h2>
-      <input id="title" type="text" placeholder="Tiêu đề" />
-      <textarea id="content" placeholder="Nội dung"></textarea>
-      <button onclick="createPost()">Đăng</button>
-    </div>
-
-    <!-- Sort buttons -->
-    <div class="sort-buttons">
-      <button onclick="loadPosts('new')"> New</button>
-      <button onclick="loadPosts('top')"> Top</button>
-    </div>
-
-    <!-- Danh sách posts -->
-    <div id="posts"></div>
-  </div>
-
-  <script src="app.js"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
