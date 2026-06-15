@@ -96,7 +96,7 @@ class Comment {
 
             const [rows] = await pool.execute(
                 `SELECT c.*, u.username, u.avatar_url,
-                COALESCE((SELECT SUM(cv.vote_type) FROM comment_votes cv WHERE cv.comment_id = c.id), 0) AS calculated_vote_count
+COALESCE((SELECT SUM(cv.vote_type) FROM comment_votes cv WHERE cv.comment_id = c.id), c.vote_count, 0) AS calculated_vote_count
                 ${userVoteSelect}
          FROM comments c
          LEFT JOIN users u ON c.user_id = u.id
