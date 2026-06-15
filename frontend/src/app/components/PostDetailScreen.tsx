@@ -1,7 +1,7 @@
-import { ArrowLeft, ArrowUp, ArrowDown, MessageSquare, Send, LogOut, Edit, CornerDownRight } from 'lucide-react';
+import { ArrowLeft, ArrowUp, ArrowDown, MessageSquare, Send, LogOut, Edit, Trash2 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { useEffect, useState } from 'react';
-import { getPostById, votePost } from '../../api/postApi';
+import { getPostById, votePost, deletePost } from '../../api/postApi';
 import { getCommentsByPostId, createComment, voteComment } from '../../api/commentApi';
 import { isAuthenticated } from '../../api/userApi';
 
@@ -11,6 +11,7 @@ interface PostDetailScreenProps {
     onBack: () => void;
     onLogout?: () => void;
     onEditPost?: () => void;
+    onDeletePost?: () => void; // Hàm để quay lại màn hình list sau khi xóa
 }
 
 function unwrapResponse(response: any) {
@@ -59,11 +60,10 @@ function countAllComments(comments: any[]): number {
     return total;
 }
 
-// Cấu hình số lượng bình luận hiển thị mỗi lần tải
-const ROOT_COMMENTS_PER_PAGE = 30;
+const ROOT_COMMENTS_PER_PAGE = 15;
 const REPLIES_PER_PAGE = 5;
 
-export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost }: PostDetailScreenProps) {
+export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost, onDeletePost }: PostDetailScreenProps) {
     const [post, setPost] = useState<any>(null);
     const [comments, setComments] = useState<any[]>([]);
     const [commentText, setCommentText] = useState('');
@@ -73,7 +73,6 @@ export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost }:
     const [votingPost, setVotingPost] = useState(false);
     const [commentSort, setCommentSort] = useState<'new' | 'top'>('new');
 
-    // State quản lý phân trang Frontend
     const [visiblePage, setVisiblePage] = useState(1);
 
     const loadData = async () => {
@@ -87,7 +86,6 @@ export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost }:
 
             setPost(unwrapPost(postRes));
             setComments(unwrapComments(commentsRes));
-            // Reset lại trang 1 mỗi khi đổi bộ lọc hoặc lấy dữ liệu mới
             setVisiblePage(1);
         } catch (err: any) {
             console.error('Lỗi lấy chi tiết bài viết:', err);
@@ -149,6 +147,23 @@ export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost }:
         }
     };
 
+    // Hàm xử lý Xóa bài viết
+    const handleDeletePost = async () => {
+        if (!window.confirm("Bạn có chắc chắn muốn xóa bài viết này không?")) return;
+
+        try {
+            await deletePost(postId);
+            // Sau khi xóa, quay trở về trang list
+            if (onDeletePost) {
+                onDeletePost();
+            } else {
+                onBack();
+            }
+        } catch (err: any) {
+            alert(err?.message || 'Xóa bài viết thất bại');
+        }
+    };
+
     if (loading) {
         return <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">Đang tải...</div>;
     }
@@ -173,7 +188,6 @@ export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost }:
     const isAuthor = user && (user.id === post.user_id || user.username === post.username);
     const isEdited = new Date(post.updated_at).getTime() > new Date(post.created_at).getTime() + 2000;
 
-    // Lọc ra số lượng comments gốc được phép hiển thị dựa trên trang hiện tại
     const visibleComments = comments.slice(0, visiblePage * ROOT_COMMENTS_PER_PAGE);
     const hasMoreComments = visibleComments.length < comments.length;
 
@@ -240,11 +254,20 @@ export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost }:
                             <span>{totalComments} Comments</span>
                         </div>
 
-                        {isAuthor && onEditPost && (
-                            <button onClick={onEditPost} className="flex items-center gap-2 text-gray-400 hover:text-white hover:bg-[#0a0a0a] px-3 py-1.5 rounded-full transition-colors ml-auto">
-                                <Edit className="w-5 h-5" />
-                                <span className="font-medium">Edit</span>
-                            </button>
+                        {/* Nút Sửa & Xóa dành cho Author */}
+                        {isAuthor && (
+                            <div className="flex items-center gap-2 ml-auto">
+                                {onEditPost && (
+                                    <button onClick={onEditPost} className="flex items-center gap-2 text-gray-400 hover:text-blue-400 hover:bg-[#0a0a0a] px-3 py-1.5 rounded-full transition-colors" title="Chỉnh sửa bài viết">
+                                        <Edit className="w-5 h-5" />
+                                        <span className="font-medium hidden sm:inline">Edit</span>
+                                    </button>
+                                )}
+                                <button onClick={handleDeletePost} className="flex items-center gap-2 text-gray-400 hover:text-red-500 hover:bg-[#0a0a0a] px-3 py-1.5 rounded-full transition-colors" title="Xóa bài viết">
+                                    <Trash2 className="w-5 h-5" />
+                                    <span className="font-medium hidden sm:inline">Delete</span>
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -297,7 +320,6 @@ export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost }:
                         ))
                     )}
 
-                    {/* Nút Xem thêm cho Root Comments */}
                     {hasMoreComments && (
                         <div className="py-6 flex justify-center">
                             <button
@@ -330,7 +352,6 @@ function DarkComment({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isVoting, setIsVoting] = useState(false);
 
-    // State quản lý số lượng reply hiển thị
     const [visibleRepliesCount, setVisibleRepliesCount] = useState(REPLIES_PER_PAGE);
 
     const maxDepth = 8;
@@ -361,7 +382,7 @@ function DarkComment({
 
             setReplyText('');
             setShowReplyInput(false);
-            setVisibleRepliesCount(prev => prev + 1); // Hiển thị thêm dòng reply vừa đăng
+            setVisibleRepliesCount(prev => prev + 1);
             await onReload();
         } catch (err: any) {
             console.error('Lỗi trả lời bình luận:', err);
@@ -488,7 +509,6 @@ function DarkComment({
                             />
                         ))}
 
-                        {/* Nút hiển thị thêm các phản hồi con */}
                         {hasMoreReplies && (
                             <button
                                 onClick={() => setVisibleRepliesCount(prev => prev + 10)}

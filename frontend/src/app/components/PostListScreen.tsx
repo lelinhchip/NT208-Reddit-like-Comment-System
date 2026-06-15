@@ -1,13 +1,14 @@
-import { Search, ArrowUp, ArrowDown, MessageSquare, Plus, LogOut, RefreshCw } from 'lucide-react';
+import { Search, ArrowUp, ArrowDown, MessageSquare, Plus, LogOut, RefreshCw, Trash2, Edit } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { getAllPosts, searchPosts, votePost } from '../../api/postApi';
+import Markdown from 'react-markdown';
+import { getAllPosts, searchPosts, votePost, deletePost } from '../../api/postApi';
 import { isAuthenticated } from '../../api/userApi';
 
 interface PostListScreenProps {
     user?: any;
     onLogout: () => void;
     onPostClick: (postId: string | number) => void;
-    onCreatePostClick: () => void;
+    onCreatePostClick: (editPostId?: string | number) => void;
 }
 
 function getScore(post: any) {
@@ -80,6 +81,18 @@ export function PostListScreen({ user, onLogout, onPostClick, onCreatePostClick 
         }
     };
 
+    const handleDelete = async (e: React.MouseEvent, postId: string | number) => {
+        e.stopPropagation();
+        if (!window.confirm("Bạn có chắc chắn muốn xóa bài viết này không?")) return;
+
+        try {
+            await deletePost(postId);
+            await loadPosts(page); // Tải lại trang sau khi xóa
+        } catch (err: any) {
+            alert(err?.message || 'Xóa bài viết thất bại');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#0a0a0a]">
             <div className="bg-[#1a1a1a] border-b border-[#2a2a2a] px-4 py-3 sticky top-0 z-10">
@@ -129,7 +142,7 @@ export function PostListScreen({ user, onLogout, onPostClick, onCreatePostClick 
                         </button>
                     </div>
 
-                    <button onClick={onCreatePostClick} className="hidden sm:inline-flex items-center gap-2 bg-[#FF4500] hover:bg-[#ff5722] text-white px-4 py-2 rounded-full font-medium transition-colors">
+                    <button onClick={() => onCreatePostClick()} className="hidden sm:inline-flex items-center gap-2 bg-[#FF4500] hover:bg-[#ff5722] text-white px-4 py-2 rounded-full font-medium transition-colors">
                         <Plus className="w-4 h-4" /> Create
                     </button>
                 </div>
@@ -146,7 +159,10 @@ export function PostListScreen({ user, onLogout, onPostClick, onCreatePostClick 
                             <PostCard
                                 key={post.id}
                                 post={post}
+                                user={user}
                                 onClick={() => onPostClick(post.id)}
+                                onEdit={(e) => { e.stopPropagation(); onCreatePostClick(post.id); }}
+                                onDelete={(e) => handleDelete(e, post.id)}
                                 onVote={handleVote}
                             />
                         ))}
@@ -174,7 +190,7 @@ export function PostListScreen({ user, onLogout, onPostClick, onCreatePostClick 
                 )}
 
                 <button
-                    onClick={onCreatePostClick}
+                    onClick={() => onCreatePostClick()}
                     className="sm:hidden fixed bottom-8 right-8 w-14 h-14 bg-[#FF4500] hover:bg-[#ff5722] rounded-full flex items-center justify-center shadow-lg transition-colors z-20"
                     title="Create Post"
                 >
@@ -185,28 +201,71 @@ export function PostListScreen({ user, onLogout, onPostClick, onCreatePostClick 
     );
 }
 
-function PostCard({ post, onClick, onVote }: { post: any; onClick: () => void; onVote: (e: React.MouseEvent, postId: string | number, voteType: 1 | -1) => void }) {
+function PostCard({
+    post,
+    user,
+    onClick,
+    onEdit,
+    onDelete,
+    onVote
+}: {
+    post: any;
+    user: any;
+    onClick: () => void;
+    onEdit: (e: React.MouseEvent) => void;
+    onDelete: (e: React.MouseEvent) => void;
+    onVote: (e: React.MouseEvent, postId: string | number, voteType: 1 | -1) => void;
+}) {
     const userVote = post?.user_vote;
     const isEdited = new Date(post.updated_at).getTime() > new Date(post.created_at).getTime() + 2000;
 
+    // Kiểm tra xem người đang đăng nhập có phải là tác giả không
+    const isAuthor = user && (user.id === post.user_id || user.username === post.username);
+
     return (
-        <div onClick={onClick} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 hover:border-[#3a3a3a] transition-colors cursor-pointer">
-            <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center">
-                    <span className="text-white text-xs">r/</span>
+        <div onClick={onClick} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 hover:border-[#3a3a3a] transition-colors cursor-pointer group">
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center">
+                        <span className="text-white text-xs">r/</span>
+                    </div>
+                    <span className="text-sm font-medium text-white">{post.community || 'r/general'}</span>
+                    <span className="text-gray-600">•</span>
+                    <span className="text-sm text-gray-400">u/{post.username || 'Anonymous'}</span>
+                    <span className="text-gray-600">•</span>
+                    <span className="text-sm text-gray-400">
+                        {formatDate(post.created_at)}
+                        {isEdited && <span className="ml-1 italic">(edited)</span>}
+                    </span>
                 </div>
-                <span className="text-sm font-medium text-white">{post.community || 'r/general'}</span>
-                <span className="text-gray-600">•</span>
-                <span className="text-sm text-gray-400">u/{post.username || 'Anonymous'}</span>
-                <span className="text-gray-600">•</span>
-                <span className="text-sm text-gray-400">
-                    {formatDate(post.created_at)}
-                    {isEdited && <span className="ml-1 italic">(edited)</span>}
-                </span>
+
+                {/* Các nút Tùy chọn (Chỉ hiện cho Tác giả) */}
+                {isAuthor && (
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                            onClick={onEdit}
+                            className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-[#2a2a2a] rounded transition-colors"
+                            title="Chỉnh sửa bài viết"
+                        >
+                            <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={onDelete}
+                            className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-[#2a2a2a] rounded transition-colors"
+                            title="Xóa bài viết"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
             </div>
 
             <h3 className="text-white mb-2 text-lg font-semibold">{post.title}</h3>
-            <p className="text-gray-400 text-sm line-clamp-2 mb-3 whitespace-pre-wrap">{post.content}</p>
+
+            {/* Sử dụng Markdown và giới hạn chiều cao bằng line-clamp */}
+            <div className="text-gray-300 text-sm mb-4 line-clamp-4 overflow-hidden prose prose-invert max-w-none prose-p:my-1 prose-a:text-blue-400 hover:prose-a:underline prose-img:rounded-md prose-img:max-h-32 prose-img:object-cover prose-pre:bg-[#0a0a0a] prose-pre:p-2 prose-pre:rounded prose-pre:border prose-pre:border-[#2a2a2a]">
+                <Markdown>{post.content}</Markdown>
+            </div>
 
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 bg-[#0a0a0a] rounded-full px-3 py-1.5">

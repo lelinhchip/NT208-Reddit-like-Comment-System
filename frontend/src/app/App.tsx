@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { LoginScreen } from './components/LoginScreen';
 import { RegistrationScreen } from './components/RegistrationScreen';
 import { PostListScreen } from './components/PostListScreen';
@@ -51,7 +51,16 @@ export default function App() {
                     user={currentUser}
                     onLogout={handleLogout}
                     onPostClick={goToPost}
-                    onCreatePostClick={() => setCurrentScreen('createPost')}
+                    // SỬA Ở ĐÂY: Nhận postId để phân biệt Sửa hay Tạo mới
+                    onCreatePostClick={(postId?: string | number) => {
+                        if (postId) {
+                            setSelectedPostId(String(postId));
+                            setCurrentScreen('editPost');
+                        } else {
+                            setSelectedPostId(null);
+                            setCurrentScreen('createPost');
+                        }
+                    }}
                 />
             )}
 
@@ -66,8 +75,11 @@ export default function App() {
                         }
                     }}
                     onCancel={() => {
+                        // Trở về đúng màn hình trước đó
                         if (currentScreen === 'editPost' && selectedPostId) {
-                            setCurrentScreen('postDetail');
+                            // Nếu bấm edit từ list thì quay về list là tốt nhất, 
+                            // nếu bạn muốn quay về detail thì đổi thành 'postDetail'
+                            setCurrentScreen('postList');
                         } else {
                             setCurrentScreen('postList');
                         }
