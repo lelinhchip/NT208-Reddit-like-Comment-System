@@ -135,26 +135,11 @@ This project is a Reddit-like comment and discussion system developed to handle 
 </div>
 
 ## Installation & Usage
-### Method 1: Using Docker (Recommended)
-The fastest way to get the project running with zero configuration.
-```bash
-# 1. Clone the repository
-git clone [https://github.com/lelinhchip/NT208-Reddit-like-Comment-System.git](https://github.com/lelinhchip/NT208-Reddit-like-Comment-System.git)
-cd NT208-Reddit-like-Comment-System
-
-# 2. Build and start all services
-docker-compose up --build
-
-# 3. Access the application
-# Frontend: http://localhost:5173
-# Backend:  http://localhost:5000
-# Database: localhost:3307
-```
 
 First, clone the repository to your local machine:
 ```bash
-git clone <your-repository-url>
-cd threadhub
+git clone [https://github.com/lelinhchip/NT208-Reddit-like-Comment-System.git](https://github.com/lelinhchip/NT208-Reddit-like-Comment-System.git)
+cd NT208-Reddit-like-Comment-System
 ```
 
 Choose one of the following methods to run the application:
