@@ -297,8 +297,8 @@ export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost, o
                         onChange={(e) => setCommentSort(e.target.value as 'new' | 'top')}
                         className="bg-[#1a1a1a] text-white border border-[#2a2a2a] rounded px-3 py-1.5 focus:outline-none focus:border-gray-500 transition-colors"
                     >
-                        <option value="new">Mới nhất</option>
-                        <option value="top">Top (Nhiều Vote)</option>
+                        <option value="new">New</option>
+                        <option value="top">Top Vote</option>
                     </select>
                 </div>
 

@@ -11,7 +11,7 @@ class Post {
 
     static getPostSelectSql() {
         return `p.*, u.username, u.avatar_url,
-                COALESCE((SELECT SUM(pv.vote_type) FROM post_votes pv WHERE pv.post_id = p.id), 0) AS vote_count,
+                COALESCE((SELECT SUM(pv.vote_type) FROM post_votes pv WHERE pv.post_id = p.id), p.vote_count, 0) AS vote_count,
                 (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count`;
     }
 
