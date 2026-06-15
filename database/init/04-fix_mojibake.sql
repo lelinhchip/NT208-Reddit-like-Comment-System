@@ -1,6 +1,4 @@
 -- 04-fix_mojibake.sql
--- Run this once if Vietnamese text is already stored like: BÃ i viáº¿t, Ná»™i dung...
--- IMPORTANT: back up your DB first. This updates only rows that look mojibake-corrupted.
 
 SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
 SET character_set_client = utf8mb4;
