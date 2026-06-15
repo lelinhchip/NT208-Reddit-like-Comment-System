@@ -125,12 +125,12 @@ This project is a Reddit-like comment and discussion system developed to handle 
 ## Team Members
 <div align="center">
 
-| Name | Role | MSSV |
+| Name | Role | GitHub | Student ID |
 | :--- | :--- |:--- |
-| **Lê Hồ Khánh Linh** | Developer | 24520958 | 
-| **Bùi Nguyễn Minh Anh** | Developer | 24520086 | 
-| **Lê Lâm Bảo Tư** | Developer | 24521909 |
-| **Thân Thị Khánh Linh** | Developer | 24520969 | 
+| **Lê Hồ Khánh Linh** | Developer | [lelinhchip](https://github.com/lelinhchip) | 24520958 | 
+| **Bùi Nguyễn Minh Anh** | Developer | [itpanda-allday](https://github.com/itpanda-allday) | 24520086 | 
+| **Lê Lâm Bảo Tư** | Developer | [turlette](https://github.com/turlette) | 24521909 |
+| **Thân Thị Khánh Linh** | Developer | [klinhhaw](https://github.com/klinhhaw) | 24520969 | 
 
 </div>
 
