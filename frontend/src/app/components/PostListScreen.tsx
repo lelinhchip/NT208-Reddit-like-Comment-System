@@ -7,6 +7,7 @@ import { isAuthenticated } from '../../api/userApi';
 interface PostListScreenProps {
     user?: any;
     onLogout: () => void;
+    onLoginClick: () => void; // Thêm prop này
     onPostClick: (postId: string | number) => void;
     onCreatePostClick: (editPostId?: string | number) => void;
 }
@@ -26,7 +27,7 @@ function formatDate(value: string) {
     return date.toLocaleString();
 }
 
-export function PostListScreen({ user, onLogout, onPostClick, onCreatePostClick }: PostListScreenProps) {
+export function PostListScreen({ user, onLogout, onLoginClick, onPostClick, onCreatePostClick }: PostListScreenProps) {
     const [posts, setPosts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -70,6 +71,7 @@ export function PostListScreen({ user, onLogout, onPostClick, onCreatePostClick 
 
         if (!isAuthenticated()) {
             alert('Vui lòng đăng nhập để vote');
+            onLoginClick(); // Chuyển sang màn hình login luôn
             return;
         }
 
@@ -87,7 +89,7 @@ export function PostListScreen({ user, onLogout, onPostClick, onCreatePostClick 
 
         try {
             await deletePost(postId);
-            await loadPosts(page); // Tải lại trang sau khi xóa
+            await loadPosts(page); 
         } catch (err: any) {
             alert(err?.message || 'Xóa bài viết thất bại');
         }
@@ -117,10 +119,18 @@ export function PostListScreen({ user, onLogout, onPostClick, onCreatePostClick 
                     </button>
 
                     <div className="hidden sm:block text-right">
-                        <div className="text-white text-sm font-medium">u/{user?.username || 'User'}</div>
-                        <button onClick={onLogout} className="text-xs text-gray-400 hover:text-[#FF4500] transition-colors inline-flex items-center gap-1">
-                            <LogOut className="w-3 h-3" /> Logout
-                        </button>
+                        {user && user.username ? (
+                            <>
+                                <div className="text-white text-sm font-medium">u/{user.username}</div>
+                                <button onClick={onLogout} className="text-xs text-gray-400 hover:text-[#FF4500] transition-colors inline-flex items-center gap-1 mt-0.5">
+                                    <LogOut className="w-3 h-3" /> Logout
+                                </button>
+                            </>
+                        ) : (
+                            <button onClick={onLoginClick} className="bg-[#FF4500] hover:bg-[#ff5722] text-white px-5 py-1.5 rounded-full text-sm font-medium transition-colors">
+                                Đăng nhập
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -201,26 +211,26 @@ export function PostListScreen({ user, onLogout, onPostClick, onCreatePostClick 
     );
 }
 
-function PostCard({
-    post,
-    user,
-    onClick,
-    onEdit,
-    onDelete,
-    onVote
-}: {
-    post: any;
-    user: any;
-    onClick: () => void;
+function PostCard({ 
+    post, 
+    user, 
+    onClick, 
+    onEdit, 
+    onDelete, 
+    onVote 
+}: { 
+    post: any; 
+    user: any; 
+    onClick: () => void; 
     onEdit: (e: React.MouseEvent) => void;
     onDelete: (e: React.MouseEvent) => void;
-    onVote: (e: React.MouseEvent, postId: string | number, voteType: 1 | -1) => void;
+    onVote: (e: React.MouseEvent, postId: string | number, voteType: 1 | -1) => void; 
 }) {
     const userVote = post?.user_vote;
     const isEdited = new Date(post.updated_at).getTime() > new Date(post.created_at).getTime() + 2000;
-
-    // Kiểm tra xem người đang đăng nhập có phải là tác giả không
-    const isAuthor = user && (user.id === post.user_id || user.username === post.username);
+    
+    // Kiểm tra xem người đang đăng nhập có phải là tác giả không (Bảo vệ lỗi null user)
+    const isAuthor = user && user.id && (user.id === post.user_id || user.username === post.username);
 
     return (
         <div onClick={onClick} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 hover:border-[#3a3a3a] transition-colors cursor-pointer group">
@@ -239,18 +249,17 @@ function PostCard({
                     </span>
                 </div>
 
-                {/* Các nút Tùy chọn (Chỉ hiện cho Tác giả) */}
                 {isAuthor && (
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                            onClick={onEdit}
+                        <button 
+                            onClick={onEdit} 
                             className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-[#2a2a2a] rounded transition-colors"
                             title="Chỉnh sửa bài viết"
                         >
                             <Edit className="w-4 h-4" />
                         </button>
-                        <button
-                            onClick={onDelete}
+                        <button 
+                            onClick={onDelete} 
                             className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-[#2a2a2a] rounded transition-colors"
                             title="Xóa bài viết"
                         >
@@ -261,8 +270,7 @@ function PostCard({
             </div>
 
             <h3 className="text-white mb-2 text-lg font-semibold">{post.title}</h3>
-
-            {/* Sử dụng Markdown và giới hạn chiều cao bằng line-clamp */}
+            
             <div className="text-gray-300 text-sm mb-4 line-clamp-4 overflow-hidden prose prose-invert max-w-none prose-p:my-1 prose-a:text-blue-400 hover:prose-a:underline prose-img:rounded-md prose-img:max-h-32 prose-img:object-cover prose-pre:bg-[#0a0a0a] prose-pre:p-2 prose-pre:rounded prose-pre:border prose-pre:border-[#2a2a2a]">
                 <Markdown>{post.content}</Markdown>
             </div>

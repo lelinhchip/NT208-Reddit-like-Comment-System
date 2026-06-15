@@ -1,6 +1,8 @@
 <div align="center">
 
-<img width="50%" alt="Twinest Banner" src="" style="border-radius: 12px; margin-bottom: 20px;" />
+# ThreadHub
+
+
 
 <p>
   <a href="https://reactjs.org/"><img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" /></a>
@@ -8,10 +10,10 @@
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" /></a>
   <a href="https://expressjs.com/"><img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" /></a>
   <a href="https://www.mysql.com/"><img src="https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL" /></a>
-  <a href="https://www.apachefriends.org/index.html"><img src="https://img.shields.io/badge/XAMPP-F37623?style=for-the-badge&logo=xampp&logoColor=white" alt="XAMPP" /></a>
+  <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" /></a>
 </p>
 
-<em>A modern, full-stack discussion platform featuring nested comments, real-time interactions, and easy local deployment</em>
+<em>A modern, full-stack discussion platform featuring nested comments, real-time interactions, and containerized deployment</em>
 
 <br />
 
@@ -26,12 +28,12 @@
 
 ## Project Overview
 
-This project is a Reddit-like comment and discussion system developed to handle hierarchical data structures, user authentication, and interactive UI components. Built with a robust React frontend and a Node.js/MySQL backend, the application is designed for easy local deployment using XAMPP. Developed by students at the University of Information Technology (UIT).
+This project is a Reddit-like comment and discussion system developed to handle hierarchical data structures, user authentication, and interactive UI components. Built with a robust React frontend and a Node.js/MySQL backend, the application is fully containerized using Docker for seamless deployment and scalability. Developed by students at the University of Information Technology (UIT).
 
 ## Academic Context
 
 - **Course:** NT208
-- **Objective:** Apply practical full-stack development, database management (relational mapping for nested items), and deployment practices.
+**Objective:** Apply practical full-stack development, database management (relational mapping for nested items), and DevOps practices (Docker).
 - **Scope:** Educational project demonstrating modern web architecture.
 
 ## Key Features
@@ -115,9 +117,8 @@ This project is a Reddit-like comment and discussion system developed to handle 
 ![Express](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white)
 
-### Deployment & Tools
-![XAMPP](https://img.shields.io/badge/XAMPP-F37623?style=for-the-badge&logo=xampp&logoColor=white)
-![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white)
+### DevOps & Tools
+![Docker](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white)
 
 </div>
 
@@ -134,32 +135,48 @@ This project is a Reddit-like comment and discussion system developed to handle 
 </div>
 
 ## Installation & Usage
+### Method 1: Using Docker (Recommended)
+The fastest way to get the project running with zero configuration.
+```bash
+# 1. Clone the repository
+git clone [https://github.com/lelinhchip/NT208-Reddit-like-Comment-System.git](https://github.com/lelinhchip/NT208-Reddit-like-Comment-System.git)
+cd NT208-Reddit-like-Comment-System
 
-### 1. Database Setup (Using XAMPP)
-1. Start **Apache** and **MySQL** in XAMPP Control Panel.
-2. Open `http://localhost/phpmyadmin` in your browser.
-3. Create a new database named `reddit_db` with collation `utf8mb4_unicode_ci`.
-4. Import all `.sql` files from the `database/init/` directory in sequence (01 to 04).
+# 2. Build and start all services
+docker-compose up --build
 
-### 2. Backend Setup
+# 3. Access the application
+# Frontend: http://localhost:5173
+# Backend:  http://localhost:5000
+# Database: localhost:3307
+```
+
+> **Note:** To stop the application and clean up volumes, use `docker-compose down -v`.
+
+---
+
+### Method 2: Manual Local Setup
+
+**1. Database Setup:**
+```bash
+mysql -u root -p < database/01-init.sql
+```
+
+**2. Backend Setup:**
+
 ```bash
 cd backend
 npm install
-# Note: Ensure backend/.env is created and configured correctly for XAMPP 
-# (DB_HOST=localhost, DB_USER=root, DB_PASSWORD=, DB_NAME=reddit_db)
+cp .env.example .env  # Update with your MySQL credentials
 npm start
 ```
 
-### 3. Frontend Setup
+**3. Frontend Setup:**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-
-> **Access the application:**
-> - Frontend: `http://localhost:5173`
-> - Backend API: `http://localhost:5000`
 
 ## API Documentation
 
@@ -177,5 +194,6 @@ Detailed endpoint specifications and payload structures can be found in the [API
 ---
 
 <div align="center">
-  <p style="font-size: 10px; color: gray">© 2026 Twinest Project</p>
+  <p style="font-size: 10px; color: gray">© 2026 
+  Project</p>
 </div>

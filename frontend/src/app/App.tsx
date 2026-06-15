@@ -9,7 +9,8 @@ import { getCurrentUser, isAuthenticated, logoutUser } from '../api/userApi';
 type Screen = 'login' | 'register' | 'postList' | 'postDetail' | 'createPost' | 'editPost';
 
 export default function App() {
-    const [currentScreen, setCurrentScreen] = useState<Screen>(isAuthenticated() ? 'postList' : 'login');
+    // SỬA Ở ĐÂY: Mặc định ai cũng có thể xem trang chủ danh sách bài viết
+    const [currentScreen, setCurrentScreen] = useState<Screen>('postList');
     const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
     const [currentUser, setCurrentUser] = useState<any>(getCurrentUser());
 
@@ -27,7 +28,7 @@ export default function App() {
         logoutUser();
         setCurrentUser(null);
         setSelectedPostId(null);
-        setCurrentScreen('login');
+        setCurrentScreen('postList'); // Đăng xuất xong vẫn cho ở lại trang danh sách (Guest)
     };
 
     return (
@@ -50,9 +51,16 @@ export default function App() {
                 <PostListScreen
                     user={currentUser}
                     onLogout={handleLogout}
+                    onLoginClick={() => setCurrentScreen('login')} // Thêm prop onLoginClick
                     onPostClick={goToPost}
-                    // SỬA Ở ĐÂY: Nhận postId để phân biệt Sửa hay Tạo mới
                     onCreatePostClick={(postId?: string | number) => {
+                        // SỬA Ở ĐÂY: Kiểm tra đăng nhập trước khi cho bấm "+" hoặc Edit
+                        if (!isAuthenticated()) {
+                            alert('Vui lòng đăng nhập để thực hiện chức năng này!');
+                            setCurrentScreen('login');
+                            return;
+                        }
+
                         if (postId) {
                             setSelectedPostId(String(postId));
                             setCurrentScreen('editPost');
@@ -75,14 +83,7 @@ export default function App() {
                         }
                     }}
                     onCancel={() => {
-                        // Trở về đúng màn hình trước đó
-                        if (currentScreen === 'editPost' && selectedPostId) {
-                            // Nếu bấm edit từ list thì quay về list là tốt nhất, 
-                            // nếu bạn muốn quay về detail thì đổi thành 'postDetail'
-                            setCurrentScreen('postList');
-                        } else {
-                            setCurrentScreen('postList');
-                        }
+                        setCurrentScreen('postList');
                     }}
                 />
             )}

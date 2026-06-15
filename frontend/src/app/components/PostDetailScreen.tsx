@@ -11,7 +11,7 @@ interface PostDetailScreenProps {
     onBack: () => void;
     onLogout?: () => void;
     onEditPost?: () => void;
-    onDeletePost?: () => void; // Hàm để quay lại màn hình list sau khi xóa
+    onDeletePost?: () => void;
 }
 
 function unwrapResponse(response: any) {
@@ -60,7 +60,7 @@ function countAllComments(comments: any[]): number {
     return total;
 }
 
-const ROOT_COMMENTS_PER_PAGE = 15;
+const ROOT_COMMENTS_PER_PAGE = 30;
 const REPLIES_PER_PAGE = 5;
 
 export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost, onDeletePost }: PostDetailScreenProps) {
@@ -98,7 +98,6 @@ export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost, o
     useEffect(() => {
         setLoading(true);
         void loadData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [postId, commentSort]);
 
     const requireLogin = (message: string) => {
@@ -147,13 +146,11 @@ export function PostDetailScreen({ postId, user, onBack, onLogout, onEditPost, o
         }
     };
 
-    // Hàm xử lý Xóa bài viết
     const handleDeletePost = async () => {
         if (!window.confirm("Bạn có chắc chắn muốn xóa bài viết này không?")) return;
 
         try {
             await deletePost(postId);
-            // Sau khi xóa, quay trở về trang list
             if (onDeletePost) {
                 onDeletePost();
             } else {
