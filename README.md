@@ -138,8 +138,8 @@ This project is a Reddit-like comment and discussion system developed to handle 
 
 First, clone the repository to your local machine:
 ```bash
-git clone <your-repository-url>
-cd threadhub
+git clone [https://github.com/lelinhchip/NT208-Reddit-like-Comment-System.git](https://github.com/lelinhchip/NT208-Reddit-like-Comment-System.git)
+cd NT208-Reddit-like-Comment-System
 ```
 
 Choose one of the following methods to run the application:
