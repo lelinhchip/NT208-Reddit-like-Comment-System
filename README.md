@@ -126,7 +126,7 @@ This project is a Reddit-like comment and discussion system developed to handle 
 <div align="center">
 
 | Name | Role | GitHub | Student ID |
-| :--- | :--- |:--- |
+| :--- | :--- |:--- | :--- |
 | **Lê Hồ Khánh Linh** | Developer | [lelinhchip](https://github.com/lelinhchip) | 24520958 | 
 | **Bùi Nguyễn Minh Anh** | Developer | [itpanda-allday](https://github.com/itpanda-allday) | 24520086 | 
 | **Lê Lâm Bảo Tư** | Developer | [turlette](https://github.com/turlette) | 24521909 |
